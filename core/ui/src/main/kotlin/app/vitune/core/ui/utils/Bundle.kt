@@ -1,4 +1,4 @@
-package app.vitune.android.utils
+package app.vitune.core.ui.utils
 
 import android.annotation.SuppressLint
 import android.app.SearchManager

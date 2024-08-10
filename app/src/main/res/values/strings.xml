@@ -119,7 +119,7 @@
     <string name="error_unplayable">Couldn\'t find a playable audio format</string>
     <string name="error_source_deleted">The original video source of this song has been deleted</string>
     <string name="error_server_restrictions">This song cannot be played due to server restrictions</string>
-    <string name="error_id_mismatch">The returned video id doesn\'t match the requested one</string>
+    <string name="error_id_mismatch">The returned video ID doesn\'t match the requested one</string>
     <string name="error_unknown_playback">An unknown playback error has occurred</string>
     <string name="error_piped_link">There was an unknown error linking your Piped account. Please try again.</string>
     <string name="error_piped_instances_unavailable">Piped instance list currently unavailable</string>

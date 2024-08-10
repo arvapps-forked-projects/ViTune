@@ -27,7 +27,7 @@ class CallValidator(
 
     fun canCall(pak: String, uid: Int) = cache.getOrPut(pak to uid) cache@{
         val info = getPackageInfo(pak) ?: return@cache false
-        if (info.applicationInfo.uid != uid) return@cache false
+        if (info.applicationInfo?.uid != uid) return@cache false
         val signature = info.signature ?: return@cache false
 
         val permissions = info.requestedPermissions?.filterIndexed { index, _ ->
@@ -61,8 +61,10 @@ class CallValidator(
 
     @Suppress("DEPRECATION") // backwards compat
     private val PackageInfo.signature
-        get() = if (signatures?.size != 1) null
-        else signatures.firstOrNull()?.toByteArray()?.sha256
+        get() = signatures?.let { signatures ->
+            if (signatures.size != 1) null
+            else signatures.firstOrNull()?.toByteArray()?.sha256
+        }
 
     private val ByteArray.sha256: String?
         get() = runCatching {
@@ -71,7 +73,6 @@ class CallValidator(
             md.digest()
         }.getOrNull()
             ?.joinToString(":") { String.format("%02x", it) }
-
 }
 
 @JvmInline

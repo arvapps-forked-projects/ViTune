@@ -86,7 +86,7 @@ import app.vitune.android.utils.seamlessPlay
 import app.vitune.android.utils.secondary
 import app.vitune.android.utils.semiBold
 import app.vitune.android.utils.shouldBePlaying
-import app.vitune.android.utils.songBundle
+import app.vitune.core.ui.utils.songBundle
 import app.vitune.android.utils.thumbnail
 import app.vitune.compose.persist.PersistMapCleanup
 import app.vitune.compose.routing.OnGlobalRoute

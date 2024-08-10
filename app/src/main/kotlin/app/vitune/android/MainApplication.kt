@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.os.StrictMode
+import android.os.StrictMode.VmPolicy
 import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -77,14 +79,14 @@ import app.vitune.android.ui.screens.searchResultRoute
 import app.vitune.android.ui.screens.settingsRoute
 import app.vitune.android.utils.DisposableListener
 import app.vitune.android.utils.LocalMonetCompat
-import app.vitune.android.utils.activityIntentBundle
+import app.vitune.core.ui.utils.activityIntentBundle
 import app.vitune.android.utils.asMediaItem
 import app.vitune.android.utils.collectProvidedBitmapAsState
 import app.vitune.android.utils.forcePlay
 import app.vitune.android.utils.intent
 import app.vitune.android.utils.invokeOnReady
 import app.vitune.android.utils.setDefaultPalette
-import app.vitune.android.utils.songBundle
+import app.vitune.core.ui.utils.songBundle
 import app.vitune.android.utils.toast
 import app.vitune.compose.persist.LocalPersistMap
 import app.vitune.compose.persist.PersistMap
@@ -97,6 +99,7 @@ import app.vitune.core.ui.amoled
 import app.vitune.core.ui.appearance
 import app.vitune.core.ui.rippleTheme
 import app.vitune.core.ui.shimmerTheme
+import app.vitune.core.ui.utils.isAtLeastAndroid12
 import app.vitune.providers.innertube.Innertube
 import app.vitune.providers.innertube.models.bodies.BrowseBody
 import app.vitune.providers.innertube.requests.playlistPage
@@ -439,6 +442,18 @@ val LocalCredentialManager = staticCompositionLocalOf { Dependencies.credentialM
 
 class MainApplication : Application(), ImageLoaderFactory, Configuration.Provider {
     override fun onCreate() {
+        StrictMode.setVmPolicy(
+            VmPolicy.Builder()
+                // TODO: check all intent launchers for 'unsafe' intents (new rules like 'all intents should have an action')
+                .let {
+                    if (isAtLeastAndroid12) it.detectUnsafeIntentLaunch()
+                    else it
+                }
+                .penaltyLog()
+                .penaltyDeath()
+                .build()
+        )
+
         MonetCompat.debugLog = BuildConfig.DEBUG
         super.onCreate()
 

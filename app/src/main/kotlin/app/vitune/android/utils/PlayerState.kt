@@ -24,6 +24,7 @@ import androidx.media3.common.Timeline
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.service.PlayerService
+import app.vitune.core.ui.utils.EqualizerIntentBundleAccessor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.time.Duration

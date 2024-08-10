@@ -9,15 +9,15 @@ android {
     val appId = "${project.group}.android"
 
     namespace = appId
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = appId
 
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 35
 
-        versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 7
+        versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 8
         versionName = project.version.toString()
 
         multiDexEnabled = true
@@ -116,6 +116,8 @@ dependencies {
     implementation(projects.compose.preferences)
     implementation(projects.compose.routing)
     implementation(projects.compose.reordering)
+
+    implementation(fileTree(projectDir.resolve("vendor")))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.activity)

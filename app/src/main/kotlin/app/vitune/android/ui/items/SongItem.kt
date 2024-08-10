@@ -30,7 +30,7 @@ import app.vitune.android.ui.components.themed.TextPlaceholder
 import app.vitune.android.utils.medium
 import app.vitune.android.utils.secondary
 import app.vitune.android.utils.semiBold
-import app.vitune.android.utils.songBundle
+import app.vitune.core.ui.utils.songBundle
 import app.vitune.android.utils.thumbnail
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.shimmer
