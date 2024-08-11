@@ -261,7 +261,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                     .build(),
-                /* handleAudioFocus = */ true
+                /* handleAudioFocus = */ PlayerPreferences.handleAudioFocus
             )
             .setUsePlatformDiagnostics(false)
             .build()

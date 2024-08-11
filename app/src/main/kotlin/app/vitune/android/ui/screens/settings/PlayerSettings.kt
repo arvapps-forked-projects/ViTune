@@ -21,6 +21,7 @@ import androidx.media3.common.util.UnstableApi
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.preferences.PlayerPreferences
+import app.vitune.android.service.PlayerService
 import app.vitune.android.ui.components.themed.SecondaryTextButton
 import app.vitune.android.ui.screens.Route
 import app.vitune.android.utils.rememberEqualizerLauncher
@@ -32,6 +33,7 @@ import app.vitune.core.ui.utils.isAtLeastAndroid6
 fun PlayerSettings() = with(PlayerPreferences) {
     val binder = LocalPlayerServiceBinder.current
     val launchEqualizer by rememberEqualizerLauncher(audioSessionId = { binder?.player?.audioSessionId })
+    var changed by rememberSaveable { mutableStateOf(false) }
 
     SettingsCategoryScreen(title = stringResource(R.string.player)) {
         SettingsGroup(title = stringResource(R.string.player)) {
@@ -66,6 +68,12 @@ fun PlayerSettings() = with(PlayerPreferences) {
             )
         }
         SettingsGroup(title = stringResource(R.string.audio)) {
+            AnimatedVisibility(visible = changed) {
+                RestartPlayerSettingsEntry(
+                    onRestart = { changed = false }
+                )
+            }
+
             SwitchSettingsEntry(
                 title = stringResource(R.string.skip_silence),
                 text = stringResource(R.string.skip_silence_description),
@@ -78,7 +86,6 @@ fun PlayerSettings() = with(PlayerPreferences) {
             AnimatedVisibility(visible = skipSilence) {
                 val initialValue by remember { derivedStateOf { minimumSilence.toFloat() / 1000L } }
                 var newValue by remember(initialValue) { mutableFloatStateOf(initialValue) }
-                var changed by rememberSaveable { mutableStateOf(false) }
 
                 Column {
                     SliderSettingsEntry(
@@ -93,25 +100,6 @@ fun PlayerSettings() = with(PlayerPreferences) {
                         toDisplay = { stringResource(R.string.format_ms, it.toLong()) },
                         range = 1f..2000f
                     )
-
-                    AnimatedVisibility(visible = changed) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            SettingsDescription(
-                                text = stringResource(R.string.minimum_silence_length_warning),
-                                important = true,
-                                modifier = Modifier.weight(2f)
-                            )
-                            SecondaryTextButton(
-                                text = stringResource(R.string.restart_service),
-                                onClick = {
-                                    binder?.restartForegroundOrStop()?.let { changed = false }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 24.dp)
-                            )
-                        }
-                    }
                 }
             }
 
@@ -160,6 +148,16 @@ fun PlayerSettings() = with(PlayerPreferences) {
                 )
             }
 
+            SwitchSettingsEntry(
+                title = stringResource(R.string.audio_focus),
+                text = stringResource(R.string.audio_focus_description),
+                isChecked = handleAudioFocus,
+                onCheckedChange = {
+                    handleAudioFocus = it
+                    changed = true
+                }
+            )
+
             SettingsEntry(
                 title = stringResource(R.string.equalizer),
                 text = stringResource(R.string.equalizer_description),
@@ -167,4 +165,29 @@ fun PlayerSettings() = with(PlayerPreferences) {
             )
         }
     }
+}
+
+@Composable
+fun RestartPlayerSettingsEntry(
+    onRestart: () -> Unit,
+    modifier: Modifier = Modifier,
+    binder: PlayerService.Binder? = LocalPlayerServiceBinder.current
+) = Row(
+    horizontalArrangement = Arrangement.spacedBy(4.dp),
+    modifier = modifier
+) {
+    SettingsDescription(
+        text = stringResource(R.string.minimum_silence_length_warning),
+        important = true,
+        modifier = Modifier.weight(2f)
+    )
+    SecondaryTextButton(
+        text = stringResource(R.string.restart_service),
+        onClick = {
+            binder?.restartForegroundOrStop()?.let { onRestart() }
+        },
+        modifier = Modifier
+            .weight(1f)
+            .padding(end = 24.dp)
+    )
 }

@@ -60,7 +60,6 @@ import app.vitune.android.Database
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.models.Lyrics
-import app.vitune.android.preferences.AppearancePreferences
 import app.vitune.android.preferences.PlayerPreferences
 import app.vitune.android.query
 import app.vitune.android.transaction
@@ -118,7 +117,7 @@ fun Lyrics(
     setShouldShowSynchronizedLyrics: (Boolean) -> Unit = {
         PlayerPreferences.isShowingSynchronizedLyrics = it
     },
-    shouldKeepScreenAwake: Boolean = AppearancePreferences.lyricsKeepScreenAwake,
+    shouldKeepScreenAwake: Boolean = PlayerPreferences.lyricsKeepScreenAwake,
     shouldUpdateLyrics: Boolean = true
 ) = AnimatedVisibility(
     visible = isDisplayed,
@@ -151,8 +150,9 @@ fun Lyrics(
         if (showSynchronizedLyrics) lyrics?.synced else lyrics?.fixed
     }
 
-    if (shouldKeepScreenAwake) DisposableEffect(Unit) {
-        view.keepScreenOn = true
+    DisposableEffect(shouldKeepScreenAwake) {
+        view.keepScreenOn = shouldKeepScreenAwake
+
         onDispose {
             view.keepScreenOn = false
         }

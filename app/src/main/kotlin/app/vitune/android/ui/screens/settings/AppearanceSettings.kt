@@ -184,8 +184,15 @@ fun AppearanceSettings() = with(AppearancePreferences) {
             SwitchSettingsEntry(
                 title = stringResource(R.string.lyrics_keep_screen_awake),
                 text = stringResource(R.string.lyrics_keep_screen_awake_description),
-                isChecked = lyricsKeepScreenAwake,
-                onCheckedChange = { lyricsKeepScreenAwake = it }
+                isChecked = PlayerPreferences.lyricsKeepScreenAwake,
+                onCheckedChange = { PlayerPreferences.lyricsKeepScreenAwake = it }
+            )
+
+            SwitchSettingsEntry(
+                title = stringResource(R.string.lyrics_show_system_bars),
+                text = stringResource(R.string.lyrics_show_system_bars_description),
+                isChecked = PlayerPreferences.lyricsShowSystemBars,
+                onCheckedChange = { PlayerPreferences.lyricsShowSystemBars = it }
             )
         }
         SettingsGroup(title = stringResource(R.string.songs)) {

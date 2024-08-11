@@ -70,8 +70,6 @@ class ReorderingState(
         )
 
         animatablesPool = AnimatablesPool(
-            size = (lazyListState.layoutInfo.viewportEndOffset - lazyListState.layoutInfo.viewportStartOffset) /
-                    (draggingItemSize + 2),
             initialValue = 0,
             typeConverter = Int.VectorConverter
         )

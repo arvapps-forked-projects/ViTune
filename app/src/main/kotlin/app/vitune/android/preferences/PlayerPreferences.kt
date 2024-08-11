@@ -44,8 +44,11 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     var wavySeekBarQuality by enum(WavySeekBarQuality.Great)
     var showLike by boolean(false)
     var showRemaining by boolean(false)
+    var lyricsKeepScreenAwake by boolean(false)
+    var lyricsShowSystemBars by boolean(true)
 
     var skipOnError by boolean(false)
+    var handleAudioFocus by boolean(true)
 
     enum class PlayerLayout(val displayName: @Composable () -> String) {
         Classic(displayName = { stringResource(R.string.classic_player_layout_name) }),
