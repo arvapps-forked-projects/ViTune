@@ -12,6 +12,10 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 abstract class ActionReceiver(private val base: String) : BroadcastReceiver() {
+    companion object {
+        const val REQUEST_CODE = 100
+    }
+
     class Action internal constructor(
         val value: String,
         internal val onReceive: (Context, Intent) -> Unit
@@ -20,7 +24,7 @@ abstract class ActionReceiver(private val base: String) : BroadcastReceiver() {
         val pendingIntent: PendingIntent
             get() = PendingIntent.getBroadcast(
                 /* context = */ this@Context,
-                /* requestCode = */ 100,
+                /* requestCode = */ REQUEST_CODE,
                 /* intent = */ Intent(value).setPackage(packageName),
                 /* flags = */ PendingIntent.FLAG_UPDATE_CURRENT or
                         (if (isAtLeastAndroid6) PendingIntent.FLAG_IMMUTABLE else 0)
@@ -47,6 +51,13 @@ abstract class ActionReceiver(private val base: String) : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         mutableActions[intent.action]?.onReceive?.let { it(context, intent) }
     }
+
+    context(Context)
+    @JvmName("_register")
+    fun register(
+        @ContextCompat.RegisterReceiverFlags
+        flags: Int = ContextCompat.RECEIVER_NOT_EXPORTED
+    ) = register(this@Context, flags)
 
     fun register(
         context: Context,

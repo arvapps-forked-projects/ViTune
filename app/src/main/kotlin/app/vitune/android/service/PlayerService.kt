@@ -91,10 +91,10 @@ import app.vitune.android.utils.mediaItems
 import app.vitune.android.utils.progress
 import app.vitune.android.utils.setPlaybackPitch
 import app.vitune.android.utils.shouldBePlaying
-import app.vitune.core.ui.utils.songBundle
 import app.vitune.android.utils.thumbnail
 import app.vitune.android.utils.timer
 import app.vitune.android.utils.toast
+import app.vitune.compose.preferences.SharedPreferencesProperty
 import app.vitune.core.data.enums.ExoPlayerDiskCacheSize
 import app.vitune.core.data.utils.RingBuffer
 import app.vitune.core.ui.utils.EqualizerIntentBundleAccessor
@@ -103,6 +103,7 @@ import app.vitune.core.ui.utils.isAtLeastAndroid12
 import app.vitune.core.ui.utils.isAtLeastAndroid13
 import app.vitune.core.ui.utils.isAtLeastAndroid6
 import app.vitune.core.ui.utils.isAtLeastAndroid8
+import app.vitune.core.ui.utils.songBundle
 import app.vitune.core.ui.utils.streamVolumeFlow
 import app.vitune.providers.innertube.Innertube
 import app.vitune.providers.innertube.models.NavigationEndpoint
@@ -303,63 +304,35 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             }.collect()
         }
 
-        notificationActionReceiver.register(this)
+        notificationActionReceiver.register()
         maybeResumePlaybackWhenDeviceConnected()
 
-        fun <T> CoroutineScope.subscribe(
-            state: StateFlow<T>,
-            callback: suspend (T) -> () -> Unit
-        ) = launch {
-            state.collectLatest {
-                handler.post(callback(it))
-            }
-        }
-
         preferenceUpdaterJob = coroutineScope.launch {
-            subscribe(PlayerPreferences.resumePlaybackWhenDeviceConnectedProperty.stateFlow) {
-                ::maybeResumePlaybackWhenDeviceConnected
+            fun <T : Any> subscribe(
+                prop: SharedPreferencesProperty<T>,
+                callback: (T) -> Unit
+            ) = launch { prop.stateFlow.collectLatest { handler.post { callback(it) } } }
+
+            subscribe(AppearancePreferences.isShowingThumbnailInLockscreenProperty) { maybeShowSongCoverInLockScreen() }
+
+            subscribe(PlayerPreferences.bassBoostLevelProperty) { maybeBassBoost() }
+            subscribe(PlayerPreferences.bassBoostProperty) { maybeBassBoost() }
+            subscribe(PlayerPreferences.isInvincibilityEnabledProperty) {
+                this@PlayerService.isInvincibilityEnabled = it
             }
-            subscribe(AppearancePreferences.isShowingThumbnailInLockscreenProperty.stateFlow) {
-                ::maybeShowSongCoverInLockScreen
+            subscribe(PlayerPreferences.pitchProperty) {
+                player.setPlaybackPitch(it.coerceAtLeast(0.01f))
             }
-            subscribe(PlayerPreferences.trackLoopEnabledProperty.stateFlow) {
-                ::updateRepeatMode
+            subscribe(PlayerPreferences.queueLoopEnabledProperty) { updateRepeatMode() }
+            subscribe(PlayerPreferences.resumePlaybackWhenDeviceConnectedProperty) { maybeResumePlaybackWhenDeviceConnected() }
+            subscribe(PlayerPreferences.skipSilenceProperty) { player.skipSilenceEnabled = it }
+            subscribe(PlayerPreferences.speedProperty) {
+                player.setPlaybackSpeed(it.coerceAtLeast(0.01f))
             }
-            subscribe(PlayerPreferences.queueLoopEnabledProperty.stateFlow) {
-                ::updateRepeatMode
-            }
-            subscribe(PlayerPreferences.volumeNormalizationProperty.stateFlow) {
-                ::maybeNormalizeVolume
-            }
-            subscribe(PlayerPreferences.volumeNormalizationBaseGainProperty.stateFlow) {
-                ::maybeNormalizeVolume
-            }
-            subscribe(PlayerPreferences.bassBoostProperty.stateFlow) {
-                ::maybeBassBoost
-            }
-            subscribe(PlayerPreferences.bassBoostLevelProperty.stateFlow) {
-                ::maybeBassBoost
-            }
-            subscribe(PlayerPreferences.speedProperty.stateFlow) {
-                {
-                    player.setPlaybackSpeed(it.coerceAtLeast(0.01f))
-                }
-            }
-            subscribe(PlayerPreferences.pitchProperty.stateFlow) {
-                {
-                    player.setPlaybackPitch(it.coerceAtLeast(0.01f))
-                }
-            }
-            subscribe(PlayerPreferences.isInvincibilityEnabledProperty.stateFlow) {
-                {
-                    this@PlayerService.isInvincibilityEnabled = it
-                }
-            }
-            subscribe(PlayerPreferences.skipSilenceProperty.stateFlow) {
-                {
-                    player.skipSilenceEnabled = it
-                }
-            }
+            subscribe(PlayerPreferences.trackLoopEnabledProperty) { updateRepeatMode() }
+            subscribe(PlayerPreferences.volumeNormalizationBaseGainProperty) { maybeNormalizeVolume() }
+            subscribe(PlayerPreferences.volumeNormalizationProperty) { maybeNormalizeVolume() }
+
             launch {
                 val audioManager = getSystemService<AudioManager>()
                 val stream = AudioManager.STREAM_MUSIC
@@ -542,12 +515,14 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         if (player.playerError != null) player.prepare()
     }
 
-    private fun maybeProcessRadio() = radio?.let { radio ->
-        if (player.mediaItemCount - player.currentMediaItemIndex <= 3)
+    private fun maybeProcessRadio() {
+        if (player.mediaItemCount - player.currentMediaItemIndex > 3) return
+
+        radio?.let { radio ->
             coroutineScope.launch(Dispatchers.Main) {
                 player.addMediaItems(radio.process())
             }
-        Unit
+        }
     }
 
     private fun maybeSavePlayerQueue() {
@@ -694,7 +669,10 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         metadataBuilder.putString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI, uri)
 
         if (isAtLeastAndroid13 && player.currentMediaItemIndex == 0)
-            metadataBuilder.putText(MediaMetadata.METADATA_KEY_TITLE, "${player.mediaMetadata.title} ")
+            metadataBuilder.putText(
+                MediaMetadata.METADATA_KEY_TITLE,
+                "${player.mediaMetadata.title} "
+            )
 
         mediaSession.setMetadata(metadataBuilder.build())
     }
@@ -1033,6 +1011,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         private fun startRadio(endpoint: NavigationEndpoint.Endpoint.Watch?, justAdd: Boolean) {
             radioJob?.cancel()
             radio = null
+
             YouTubeRadio(
                 endpoint?.videoId,
                 endpoint?.playlistId,
@@ -1040,10 +1019,13 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 endpoint?.params
             ).let { radioData ->
                 isLoadingRadio = true
-                radioJob = coroutineScope.launch(Dispatchers.Main) {
+                radioJob = coroutineScope.launch {
                     val items = radioData.process().let { Database.filterBlacklistedSongs(it) }
-                    if (justAdd) player.addMediaItems(items.drop(1))
-                    else player.forcePlayFromBeginning(items)
+
+                    withContext(Dispatchers.Main) {
+                        if (justAdd) player.addMediaItems(items.drop(1))
+                        else player.forcePlayFromBeginning(items)
+                    }
 
                     radio = radioData
                     isLoadingRadio = false

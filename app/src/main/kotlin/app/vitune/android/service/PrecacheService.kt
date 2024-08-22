@@ -131,7 +131,7 @@ class PrecacheService : DownloadService(
     override fun onCreate() {
         super.onCreate()
 
-        notificationActionReceiver.register(this)
+        notificationActionReceiver.register()
         mutableDownloadState.update { false }
     }
 

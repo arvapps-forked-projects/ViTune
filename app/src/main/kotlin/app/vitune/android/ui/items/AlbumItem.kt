@@ -82,12 +82,14 @@ fun AlbumItem(
     )
 
     ItemInfoContainer {
-        BasicText(
-            text = title.orEmpty(),
-            style = typography.xs.semiBold,
-            maxLines = if (alternative) 1 else 2,
-            overflow = TextOverflow.Ellipsis
-        )
+        title?.let {
+            BasicText(
+                text = title,
+                style = typography.xs.semiBold,
+                maxLines = if (alternative) 1 else 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
         if (!alternative) authors?.let {
             BasicText(
@@ -98,13 +100,15 @@ fun AlbumItem(
             )
         }
 
-        BasicText(
-            text = year.orEmpty(),
-            style = typography.xxs.semiBold.secondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 4.dp)
-        )
+        year?.let {
+            BasicText(
+                text = year,
+                style = typography.xxs.semiBold.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 }
 

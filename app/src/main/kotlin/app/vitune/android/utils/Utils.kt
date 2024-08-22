@@ -150,8 +150,10 @@ suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(
 ) = runCatching {
     val page = getOrThrow()
     val songs = page.songsPage?.items.orEmpty().toMutableList()
-    var continuation = page.songsPage?.continuation
 
+    if (songs.isEmpty()) return@runCatching page
+
+    var continuation = page.songsPage?.continuation
     var depth = 0
 
     while (continuation != null && depth++ < maxDepth) {
