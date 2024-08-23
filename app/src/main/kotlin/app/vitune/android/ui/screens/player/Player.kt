@@ -33,6 +33,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SnapshotMutationPolicy
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +64,7 @@ import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.models.ui.toUiMedia
 import app.vitune.android.preferences.PlayerPreferences
+import app.vitune.android.query
 import app.vitune.android.service.PlayerService
 import app.vitune.android.transaction
 import app.vitune.android.ui.components.BottomSheet
@@ -86,7 +88,6 @@ import app.vitune.android.utils.seamlessPlay
 import app.vitune.android.utils.secondary
 import app.vitune.android.utils.semiBold
 import app.vitune.android.utils.shouldBePlaying
-import app.vitune.core.ui.utils.songBundle
 import app.vitune.android.utils.thumbnail
 import app.vitune.compose.persist.PersistMapCleanup
 import app.vitune.compose.routing.OnGlobalRoute
@@ -97,6 +98,7 @@ import app.vitune.core.ui.collapsedPlayerProgressBar
 import app.vitune.core.ui.utils.isLandscape
 import app.vitune.core.ui.utils.px
 import app.vitune.core.ui.utils.roundedShape
+import app.vitune.core.ui.utils.songBundle
 import app.vitune.providers.innertube.models.NavigationEndpoint
 import coil.compose.AsyncImage
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -125,6 +127,31 @@ fun Player(
         )
     }
     var shouldBePlaying by remember(binder) { mutableStateOf(binder?.player?.shouldBePlaying == true) }
+
+    var likedAt by remember(mediaItem) {
+        mutableStateOf(
+            value = null,
+            policy = object : SnapshotMutationPolicy<Long?> {
+                override fun equivalent(a: Long?, b: Long?): Boolean {
+                    mediaItem?.mediaId?.let {
+                        query {
+                            Database.like(it, b)
+                        }
+                    }
+                    return a == b
+                }
+            }
+        )
+    }
+
+    LaunchedEffect(mediaItem) {
+        mediaItem?.mediaId?.let { mediaId ->
+            Database
+                .likedAt(mediaId)
+                .distinctUntilChanged()
+                .collect { likedAt = it }
+        }
+    }
 
     binder?.player.DisposableListener {
         object : Player.Listener {
@@ -345,6 +372,8 @@ fun Player(
                 isShowingStatsForNerds = isShowingStatsForNerds,
                 onShowStatsForNerds = { isShowingStatsForNerds = it },
                 onOpenDialog = { isShowingLyricsDialog = true },
+                likedAt = likedAt,
+                setLikedAt = { likedAt = it },
                 modifier = innerModifier
                     .nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
                     .pinchToToggle(
@@ -362,6 +391,8 @@ fun Player(
             Controls(
                 media = mediaItem?.toUiMedia(duration),
                 binder = binder,
+                likedAt = likedAt,
+                setLikedAt = { likedAt = it },
                 shouldBePlaying = shouldBePlaying,
                 position = position,
                 modifier = innerModifier

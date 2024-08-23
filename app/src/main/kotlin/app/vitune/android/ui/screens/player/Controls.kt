@@ -48,12 +48,9 @@ import app.vitune.android.Database
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.models.Info
-import app.vitune.android.models.Song
 import app.vitune.android.models.ui.UiMedia
 import app.vitune.android.preferences.PlayerPreferences
-import app.vitune.android.query
 import app.vitune.android.service.PlayerService
-import app.vitune.android.transaction
 import app.vitune.android.ui.components.FadingRow
 import app.vitune.android.ui.components.SeekBar
 import app.vitune.android.ui.components.themed.BigIconButton
@@ -69,7 +66,6 @@ import app.vitune.core.ui.favoritesIcon
 import app.vitune.core.ui.utils.px
 import app.vitune.core.ui.utils.roundedShape
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -79,21 +75,13 @@ private const val FORWARD_BACKWARD_OFFSET = 16f
 fun Controls(
     media: UiMedia?,
     binder: PlayerService.Binder?,
+    likedAt: Long?,
+    setLikedAt: (Long?) -> Unit,
     shouldBePlaying: Boolean,
     position: Long,
     modifier: Modifier = Modifier,
     layout: PlayerPreferences.PlayerLayout = PlayerPreferences.playerLayout
 ) {
-    var likedAt by remember { mutableStateOf<Long?>(null) }
-
-    LaunchedEffect(media) {
-        if (media == null) likedAt = null
-        else Database
-            .likedAt(media.id)
-            .distinctUntilChanged()
-            .collect { likedAt = it }
-    }
-
     val shouldBePlayingTransition = updateTransition(
         targetState = shouldBePlaying,
         label = "shouldBePlaying"
@@ -112,6 +100,7 @@ fun Controls(
             shouldBePlaying = shouldBePlaying,
             position = position,
             likedAt = likedAt,
+            setLikedAt = setLikedAt,
             playButtonRadius = playButtonRadius,
             modifier = modifier
         )
@@ -122,6 +111,7 @@ fun Controls(
             shouldBePlaying = shouldBePlaying,
             position = position,
             likedAt = likedAt,
+            setLikedAt = setLikedAt,
             playButtonRadius = playButtonRadius,
             modifier = modifier
         )
@@ -135,6 +125,7 @@ private fun ClassicControls(
     shouldBePlaying: Boolean,
     position: Long,
     likedAt: Long?,
+    setLikedAt: (Long?) -> Unit,
     playButtonRadius: Dp,
     modifier: Modifier = Modifier
 ) = with(PlayerPreferences) {
@@ -165,22 +156,7 @@ private fun ClassicControls(
                 icon = if (likedAt == null) R.drawable.heart_outline else R.drawable.heart,
                 color = colorPalette.favoritesIcon,
                 onClick = {
-                    val currentMediaItem = binder.player.currentMediaItem
-
-                    query {
-                        if (
-                            Database.like(
-                                media.id,
-                                if (likedAt == null) System.currentTimeMillis() else null
-                            ) == 0
-                        ) {
-                            currentMediaItem
-                                ?.takeIf { it.mediaId == media.id }
-                                ?.let {
-                                    Database.insert(currentMediaItem, Song::toggleLike)
-                                }
-                        }
-                    }
+                    setLikedAt(if (likedAt == null) System.currentTimeMillis() else null)
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -251,6 +227,7 @@ private fun ModernControls(
     shouldBePlaying: Boolean,
     position: Long,
     likedAt: Long?,
+    setLikedAt: (Long?) -> Unit,
     playButtonRadius: Dp,
     modifier: Modifier = Modifier,
     controlHeight: Dp = 64.dp
@@ -268,12 +245,7 @@ private fun ModernControls(
         BigIconButton(
             iconId = if (likedAt == null) R.drawable.heart_outline else R.drawable.heart,
             onClick = {
-                transaction {
-                    Database.like(
-                        songId = media.id,
-                        likedAt = if (likedAt == null) System.currentTimeMillis() else null
-                    )
-                }
+                setLikedAt(if (likedAt == null) System.currentTimeMillis() else null)
             },
             modifier = Modifier.weight(1f)
         )

@@ -6,28 +6,41 @@ import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.SeekableTransitionState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -52,9 +65,11 @@ import app.vitune.core.ui.Dimensions
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.utils.px
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 import java.net.UnknownHostException
 import java.nio.channels.UnresolvedAddressException
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalTransitionApi::class)
 @Composable
 fun Thumbnail(
     isShowingLyrics: Boolean,
@@ -62,12 +77,27 @@ fun Thumbnail(
     isShowingStatsForNerds: Boolean,
     onShowStatsForNerds: (Boolean) -> Unit,
     onOpenDialog: () -> Unit,
+    likedAt: Long?,
+    setLikedAt: (Long?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val binder = LocalPlayerServiceBinder.current
     val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
 
     val (window, error) = windowState()
+
+    val coroutineScope = rememberCoroutineScope()
+    val transitionState = remember {
+        SeekableTransitionState(initialState = false, targetState = true)
+    }
+    val transition = rememberTransition(transitionState)
+    val opacity by transition.animateFloat(label = "") { if (it) 1f else 0f }
+    val scale by transition.animateFloat(
+        label = "",
+        transitionSpec = {
+            spring(dampingRatio = Spring.DampingRatioLowBouncy)
+        }
+    ) { if (it) 1f else 0f }
 
     AnimatedContent(
         targetState = window,
@@ -150,7 +180,16 @@ fun Thumbnail(
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onTap = { if (!currentWindow.mediaItem.isLocal) onShowLyrics(true) },
-                            onLongPress = { onShowStatsForNerds(true) }
+                            onLongPress = { onShowStatsForNerds(true) },
+                            onDoubleTap = {
+                                if (likedAt == null) setLikedAt(System.currentTimeMillis())
+
+                                coroutineScope.launch {
+                                    val spec = tween<Float>(durationMillis = 500)
+                                    transitionState.animateToTargetState(spec)
+                                    transitionState.animateToCurrentState(spec)
+                                }
+                            }
                         )
                     }
                     .fillMaxWidth()
@@ -180,6 +219,22 @@ fun Thumbnail(
                 isDisplayed = isShowingStatsForNerds && error == null,
                 onDismiss = { onShowStatsForNerds(false) },
                 modifier = Modifier.height(height.px.dp)
+            )
+
+            Image(
+                painter = painterResource(R.drawable.heart),
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(colorPalette.text),
+                modifier = Modifier
+                    .fillMaxSize(0.5f)
+                    .aspectRatio(1f)
+                    .align(Alignment.Center)
+                    .graphicsLayer(
+                        scaleX = scale,
+                        scaleY = scale,
+                        alpha = opacity,
+                        shadowElevation = 8.dp.px.toFloat()
+                    )
             )
 
             PlaybackError(

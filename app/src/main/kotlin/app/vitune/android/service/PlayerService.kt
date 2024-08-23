@@ -73,6 +73,7 @@ import app.vitune.android.models.SongWithContentLength
 import app.vitune.android.preferences.AppearancePreferences
 import app.vitune.android.preferences.DataPreferences
 import app.vitune.android.preferences.PlayerPreferences
+import app.vitune.android.query
 import app.vitune.android.transaction
 import app.vitune.android.utils.ActionReceiver
 import app.vitune.android.utils.ConditionalCacheDataSourceFactory
@@ -152,6 +153,8 @@ val DataSpec.isLocal get() = key?.startsWith(LOCAL_KEY_PREFIX) == true
 val MediaItem.isLocal get() = mediaId.startsWith(LOCAL_KEY_PREFIX)
 val Song.isLocal get() = id.startsWith(LOCAL_KEY_PREFIX)
 
+private const val LIKE_ACTION = "LIKE"
+
 @kotlin.OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LargeClass", "TooManyFunctions") // intended in this class: it is a service
 @OptIn(UnstableApi::class)
@@ -178,8 +181,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 if (isAtLeastAndroid12) it or PlaybackState.ACTION_SET_PLAYBACK_SPEED else it
             }
         ).addCustomAction(
-            /* action = */ "LIKE",
-            /* name   = */ "Like",
+            /* action = */ LIKE_ACTION,
+            /* name   = */ getString(R.string.like),
             /* icon   = */ if (isLikedState.value) R.drawable.heart else R.drawable.heart_outline
         )
 
@@ -1071,7 +1074,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     private fun likeAction() = mediaItemState.value?.let { mediaItem ->
-        transaction {
+        query {
             runCatching {
                 Database.like(
                     songId = mediaItem.mediaId,
@@ -1103,7 +1106,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         override fun onCustomAction(action: String, extras: Bundle?) {
             super.onCustomAction(action, extras)
-            if (action == "LIKE") likeAction()
+            if (action == LIKE_ACTION) likeAction()
         }
     }
 
