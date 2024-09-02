@@ -7,10 +7,13 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.text.format.DateUtils
 import androidx.annotation.OptIn
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
+import app.vitune.android.R
 import app.vitune.android.models.Song
 import app.vitune.android.preferences.AppearancePreferences
 import app.vitune.android.service.LOCAL_KEY_PREFIX
@@ -22,6 +25,7 @@ import app.vitune.providers.innertube.requests.playlistPage
 import app.vitune.providers.piped.models.Playlist
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
+import kotlin.time.Duration
 
 val Innertube.SongItem.asMediaItem: MediaItem
     get() = MediaItem.Builder()
@@ -126,6 +130,14 @@ val Song.asMediaItem: MediaItem
         )
         .setCustomCacheKey(id)
         .build()
+
+val Duration.formatted @Composable get() = toComponents { hours, minutes, _, _ ->
+    when {
+        hours == 0L -> stringResource(id = R.string.format_minutes, minutes)
+        hours < 24L -> stringResource(id = R.string.format_hours, hours)
+        else -> stringResource(id = R.string.format_days, hours / 24)
+    }
+}
 
 fun String?.thumbnail(
     size: Int,

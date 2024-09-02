@@ -25,7 +25,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -117,11 +116,7 @@ fun HomePlaylists(
             contentPadding = LocalPlayerAwareWindowInsets.current
                 .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
                 .asPaddingValues(),
-            verticalArrangement = Arrangement.spacedBy(Dimensions.items.verticalPadding * 2),
-            horizontalArrangement = Arrangement.spacedBy(
-                space = Dimensions.items.verticalPadding * 2,
-                alignment = Alignment.CenterHorizontally
-            ),
+            horizontalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxSize()
                 .background(colorPalette.background0)
@@ -172,9 +167,7 @@ fun HomePlaylists(
                     songCount = null,
                     thumbnailSize = Dimensions.thumbnails.playlist,
                     alternative = true,
-                    modifier = Modifier
-                        .clickable(onClick = { onBuiltInPlaylist(BuiltInPlaylist.Favorites) })
-                        .animateItemPlacement()
+                    modifier = Modifier.clickable { onBuiltInPlaylist(BuiltInPlaylist.Favorites) }
                 )
             }
 
@@ -186,9 +179,7 @@ fun HomePlaylists(
                     songCount = null,
                     thumbnailSize = Dimensions.thumbnails.playlist,
                     alternative = true,
-                    modifier = Modifier
-                        .clickable(onClick = { onBuiltInPlaylist(BuiltInPlaylist.Offline) })
-                        .animateItemPlacement()
+                    modifier = Modifier.clickable { onBuiltInPlaylist(BuiltInPlaylist.Offline) }
                 )
             }
 
@@ -203,9 +194,19 @@ fun HomePlaylists(
                     songCount = null,
                     thumbnailSize = Dimensions.thumbnails.playlist,
                     alternative = true,
-                    modifier = Modifier
-                        .clickable(onClick = { onBuiltInPlaylist(BuiltInPlaylist.Top) })
-                        .animateItemPlacement()
+                    modifier = Modifier.clickable { onBuiltInPlaylist(BuiltInPlaylist.Top) }
+                )
+            }
+
+            item(key = "history") {
+                PlaylistItem(
+                    icon = R.drawable.history,
+                    colorTint = colorPalette.textDisabled,
+                    name = stringResource(R.string.history),
+                    songCount = null,
+                    thumbnailSize = Dimensions.thumbnails.playlist,
+                    alternative = true,
+                    modifier = Modifier.clickable { onBuiltInPlaylist(BuiltInPlaylist.History) }
                 )
             }
 

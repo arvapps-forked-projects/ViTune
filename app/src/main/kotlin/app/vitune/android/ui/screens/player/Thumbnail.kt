@@ -19,7 +19,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -69,7 +68,7 @@ import kotlinx.coroutines.launch
 import java.net.UnknownHostException
 import java.nio.channels.UnresolvedAddressException
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalTransitionApi::class)
+@OptIn(ExperimentalTransitionApi::class)
 @Composable
 fun Thumbnail(
     isShowingLyrics: Boolean,
@@ -144,16 +143,12 @@ fun Thumbnail(
             targetValue = if (window == currentWindow) 8.dp else 0.dp,
             animationSpec = tween(
                 durationMillis = 500,
-                delayMillis = 500,
                 easing = LinearEasing
             ),
             label = ""
         )
         val blurRadius by animateDpAsState(
-            targetValue = if (
-                (isShowingLyrics && currentWindow?.mediaItem?.isLocal == false) ||
-                error != null || isShowingStatsForNerds
-            ) 8.dp else 0.dp,
+            targetValue = if (isShowingLyrics || error != null || isShowingStatsForNerds) 8.dp else 0.dp,
             animationSpec = tween(500),
             label = ""
         )
@@ -179,7 +174,7 @@ fun Thumbnail(
                 modifier = Modifier
                     .pointerInput(Unit) {
                         detectTapGestures(
-                            onTap = { if (!currentWindow.mediaItem.isLocal) onShowLyrics(true) },
+                            onTap = { onShowLyrics(true) },
                             onLongPress = { onShowStatsForNerds(true) },
                             onDoubleTap = {
                                 if (likedAt == null) setLikedAt(System.currentTimeMillis())
@@ -203,7 +198,7 @@ fun Thumbnail(
                     }
             )
 
-            if (!currentWindow.mediaItem.isLocal) Lyrics(
+            Lyrics(
                 mediaId = currentWindow.mediaItem.mediaId,
                 isDisplayed = isShowingLyrics && error == null,
                 onDismiss = { onShowLyrics(false) },
@@ -224,7 +219,7 @@ fun Thumbnail(
             Image(
                 painter = painterResource(R.drawable.heart),
                 contentDescription = null,
-                colorFilter = ColorFilter.tint(colorPalette.text),
+                colorFilter = ColorFilter.tint(colorPalette.accent),
                 modifier = Modifier
                     .fillMaxSize(0.5f)
                     .aspectRatio(1f)
@@ -252,7 +247,8 @@ fun Thumbnail(
                         else -> stringResource(R.string.error_unknown_playback)
                     }
                 },
-                onDismiss = { binder?.player?.prepare() }
+                onDismiss = { binder?.player?.prepare() },
+                modifier = Modifier.height(height.px.dp)
             )
         }
     }

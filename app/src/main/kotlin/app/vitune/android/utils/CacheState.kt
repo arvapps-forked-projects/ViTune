@@ -1,6 +1,11 @@
 package app.vitune.android.utils
 
 import androidx.annotation.OptIn
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -10,6 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAll
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
@@ -20,8 +27,11 @@ import app.vitune.android.Database
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.models.Format
+import app.vitune.android.service.LOCAL_KEY_PREFIX
+import app.vitune.android.service.PlayerService
 import app.vitune.android.service.PrecacheService
 import app.vitune.android.service.downloadState
+import app.vitune.android.ui.components.themed.CircularProgressIndicator
 import app.vitune.android.ui.components.themed.HeaderIconButton
 import app.vitune.core.ui.LocalAppearance
 import kotlinx.collections.immutable.ImmutableList
@@ -37,41 +47,54 @@ fun PlaylistDownloadIcon(
 
     val isDownloading by downloadState.collectAsState()
 
-    if (
-        !songs.all {
-            isCached(
-                mediaId = it.mediaId,
-                key = isDownloading
+    AnimatedContent(
+        targetState = isDownloading,
+        label = "",
+        transitionSpec = { fadeIn() togetherWith fadeOut() }
+    ) { currentIsDownloading ->
+        when {
+            currentIsDownloading -> CircularProgressIndicator(modifier = Modifier.size(18.dp))
+
+            !songs.map { it.mediaId }.fastAll {
+                isCached(
+                    mediaId = it,
+                    key = isDownloading
+                )
+            } -> HeaderIconButton(
+                icon = R.drawable.download,
+                color = colorPalette.text,
+                onClick = {
+                    songs.forEach {
+                        PrecacheService.scheduleCache(context.applicationContext, it)
+                    }
+                },
+                modifier = modifier
             )
         }
-    ) HeaderIconButton(
-        icon = R.drawable.download,
-        color = colorPalette.text,
-        onClick = {
-            songs.forEach {
-                PrecacheService.scheduleCache(context.applicationContext, it)
-            }
-        },
-        modifier = modifier
-    )
+    }
 }
 
 @OptIn(UnstableApi::class)
 @Composable
 fun isCached(
     mediaId: String,
-    key: Any? = Unit
+    key: Any? = Unit,
+    binder: PlayerService.Binder? = LocalPlayerServiceBinder.current
 ): Boolean {
-    val cache = LocalPlayerServiceBinder.current?.cache ?: return false
+    if (mediaId.startsWith(LOCAL_KEY_PREFIX)) return true
+
     var format: Format? by remember { mutableStateOf(null) }
 
     LaunchedEffect(mediaId, key) {
-        Database.format(mediaId).distinctUntilChanged().collect { format = it }
+        Database
+            .format(mediaId)
+            .distinctUntilChanged()
+            .collect { format = it }
     }
 
-    return remember(key) {
+    return remember(mediaId, binder, format, key) {
         format?.contentLength?.let { len ->
-            cache.isCached(mediaId, 0, len)
+            binder?.cache?.isCached(mediaId, 0, len)
         } ?: false
     }
 }

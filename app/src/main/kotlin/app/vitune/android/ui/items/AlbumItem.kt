@@ -67,7 +67,7 @@ fun AlbumItem(
 ) = ItemContainer(
     alternative = alternative,
     thumbnailSize = thumbnailSize,
-    modifier = modifier
+    modifier = Modifier.clip(LocalAppearance.current.thumbnailShape) then modifier
 ) {
     val typography = LocalAppearance.current.typography
     val thumbnailShape = LocalAppearance.current.thumbnailShape

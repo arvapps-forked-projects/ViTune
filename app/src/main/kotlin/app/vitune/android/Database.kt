@@ -165,6 +165,23 @@ interface Database {
     @Query("SELECT * FROM QueuedMediaItem")
     fun queue(): List<QueuedMediaItem>
 
+    @Transaction
+    @Query(
+        """
+        SELECT Song.* FROM Event
+        JOIN Song ON Song.id = Event.songId
+        WHERE Event.ROWID in (
+	        SELECT max(Event.ROWID)
+	        FROM Event
+	        GROUP BY songId
+        )
+        ORDER BY timestamp DESC
+        LIMIT :size
+        """
+    )
+    @RewriteQueriesToDropUnusedColumns
+    fun history(size: Int = 100): Flow<List<Song>>
+
     @Query("DELETE FROM QueuedMediaItem")
     fun clearQueue()
 

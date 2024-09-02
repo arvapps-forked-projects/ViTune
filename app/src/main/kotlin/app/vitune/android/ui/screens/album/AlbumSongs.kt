@@ -51,102 +51,100 @@ fun AlbumSongs(
     thumbnailContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     afterHeaderContent: (@Composable () -> Unit)? = null
+) = LayoutWithAdaptiveThumbnail(
+    thumbnailContent = thumbnailContent,
+    modifier = modifier
 ) {
     val (colorPalette) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
     val menuState = LocalMenuState.current
     val lazyListState = rememberLazyListState()
 
-    LayoutWithAdaptiveThumbnail(
-        thumbnailContent = thumbnailContent,
-        modifier = modifier
-    ) {
-        Box {
-            LazyColumn(
-                state = lazyListState,
-                contentPadding = LocalPlayerAwareWindowInsets.current
-                    .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
-                    .asPaddingValues(),
-                modifier = Modifier
-                    .background(colorPalette.background0)
-                    .fillMaxSize()
+    Box {
+        LazyColumn(
+            state = lazyListState,
+            contentPadding = LocalPlayerAwareWindowInsets.current
+                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                .asPaddingValues(),
+            modifier = Modifier
+                .background(colorPalette.background0)
+                .fillMaxSize()
+        ) {
+            item(
+                key = "header",
+                contentType = 0
             ) {
-                item(
-                    key = "header",
-                    contentType = 0
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        headerContent(
-                            {
-                                SecondaryTextButton(
-                                    text = stringResource(R.string.enqueue),
-                                    enabled = songs.isNotEmpty(),
-                                    onClick = {
-                                        binder?.player?.enqueue(songs.map(Song::asMediaItem))
-                                    }
-                                )
-                            },
-                            {
-                                PlaylistDownloadIcon(
-                                    songs = songs.map(Song::asMediaItem).toImmutableList()
-                                )
-                            }
-                        )
-
-                        if (!isLandscape) thumbnailContent()
-                        afterHeaderContent?.invoke()
-                    }
-                }
-
-                itemsIndexed(
-                    items = songs,
-                    key = { _, song -> song.id }
-                ) { index, song ->
-                    SongItem(
-                        song = song,
-                        index = index,
-                        thumbnailSize = Dimensions.thumbnails.song,
-                        modifier = Modifier.combinedClickable(
-                            onLongClick = {
-                                menuState.display {
-                                    NonQueuedMediaItemMenu(
-                                        onDismiss = menuState::hide,
-                                        mediaItem = song.asMediaItem
-                                    )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    headerContent(
+                        {
+                            SecondaryTextButton(
+                                text = stringResource(R.string.enqueue),
+                                enabled = songs.isNotEmpty(),
+                                onClick = {
+                                    binder?.player?.enqueue(songs.map(Song::asMediaItem))
                                 }
-                            },
-                            onClick = {
-                                binder?.stopRadio()
-                                binder?.player?.forcePlayAtIndex(
-                                    items = songs.map(Song::asMediaItem),
-                                    index = index
-                                )
-                            }
-                        )
-                    )
-                }
-
-                if (songs.isEmpty()) item(key = "loading") {
-                    ShimmerHost(modifier = Modifier.fillParentMaxSize()) {
-                        repeat(4) {
-                            SongItemPlaceholder(thumbnailSize = Dimensions.thumbnails.song)
+                            )
+                        },
+                        {
+                            PlaylistDownloadIcon(
+                                songs = songs.map(Song::asMediaItem).toImmutableList()
+                            )
                         }
-                    }
+                    )
+
+                    if (!isLandscape) thumbnailContent()
+                    afterHeaderContent?.invoke()
                 }
             }
 
-            FloatingActionsContainerWithScrollToTop(
-                lazyListState = lazyListState,
-                icon = R.drawable.shuffle,
-                onClick = {
-                    if (songs.isNotEmpty()) {
-                        binder?.stopRadio()
-                        binder?.player?.forcePlayFromBeginning(
-                            songs.shuffled().map(Song::asMediaItem)
-                        )
+            itemsIndexed(
+                items = songs,
+                key = { _, song -> song.id }
+            ) { index, song ->
+                SongItem(
+                    song = song,
+                    index = index,
+                    thumbnailSize = Dimensions.thumbnails.song,
+                    modifier = Modifier.combinedClickable(
+                        onLongClick = {
+                            menuState.display {
+                                NonQueuedMediaItemMenu(
+                                    onDismiss = menuState::hide,
+                                    mediaItem = song.asMediaItem
+                                )
+                            }
+                        },
+                        onClick = {
+                            binder?.stopRadio()
+                            binder?.player?.forcePlayAtIndex(
+                                items = songs.map(Song::asMediaItem),
+                                index = index
+                            )
+                        }
+                    )
+                )
+            }
+
+            if (songs.isEmpty()) item(key = "loading") {
+                ShimmerHost(modifier = Modifier.fillParentMaxSize()) {
+                    repeat(4) {
+                        SongItemPlaceholder(thumbnailSize = Dimensions.thumbnails.song)
                     }
                 }
-            )
+            }
         }
+
+        FloatingActionsContainerWithScrollToTop(
+            lazyListState = lazyListState,
+            icon = R.drawable.shuffle,
+            onClick = {
+                if (songs.isNotEmpty()) {
+                    binder?.stopRadio()
+                    binder?.player?.forcePlayFromBeginning(
+                        songs.shuffled().map(Song::asMediaItem)
+                    )
+                }
+            }
+        )
     }
 }

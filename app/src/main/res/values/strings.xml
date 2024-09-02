@@ -29,6 +29,7 @@
 
     <string name="favorites">Favorites</string>
     <string name="offline">Offline</string>
+    <string name="history">History</string>
     <string name="overview">Overview</string>
     <string name="library">Library</string>
     <string name="discover">Discover</string>

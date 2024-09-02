@@ -58,7 +58,7 @@ fun VideoItem(
 ) = ItemContainer(
     alternative = false,
     thumbnailSize = 0.dp,
-    modifier = modifier
+    modifier = Modifier.clip(LocalAppearance.current.thumbnailShape) then modifier
 ) {
     val (colorPalette, typography, thumbnailShapeCorners) = LocalAppearance.current
 

@@ -18,16 +18,7 @@ import app.vitune.core.data.enums.BuiltInPlaylist
 @Composable
 fun BuiltInPlaylistScreen(builtInPlaylist: BuiltInPlaylist) {
     val saveableStateHolder = rememberSaveableStateHolder()
-
-    val (tabIndex, onTabIndexChanged) = rememberSaveable {
-        mutableIntStateOf(
-            when (builtInPlaylist) {
-                BuiltInPlaylist.Favorites -> 0
-                BuiltInPlaylist.Offline -> 1
-                BuiltInPlaylist.Top -> 2
-            }
-        )
-    }
+    val (tabIndex, onTabIndexChanged) = rememberSaveable { mutableIntStateOf(builtInPlaylist.ordinal) }
 
     PersistMapCleanup(prefix = "${builtInPlaylist.name}/")
 
@@ -48,14 +39,14 @@ fun BuiltInPlaylistScreen(builtInPlaylist: BuiltInPlaylist) {
                         stringResource(R.string.format_top_playlist, DataPreferences.topListLength),
                         R.drawable.trending_up
                     )
+                    item(3, stringResource(R.string.history), R.drawable.history)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {
-                    when (currentTabIndex) {
-                        0 -> BuiltInPlaylistSongs(builtInPlaylist = BuiltInPlaylist.Favorites)
-                        1 -> BuiltInPlaylistSongs(builtInPlaylist = BuiltInPlaylist.Offline)
-                        2 -> BuiltInPlaylistSongs(builtInPlaylist = BuiltInPlaylist.Top)
-                    }
+                    BuiltInPlaylist
+                        .entries
+                        .getOrNull(currentTabIndex)
+                        ?.let { BuiltInPlaylistSongs(builtInPlaylist = it) }
                 }
             }
         }

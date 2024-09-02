@@ -312,7 +312,8 @@ fun LocalPlaylistSongs(
                                 reorderingState = reorderingState,
                                 index = index
                             )
-                        }
+                        },
+                        clip = !reorderingState.isDragging
                     )
                 }
             }

@@ -39,6 +39,7 @@ import app.vitune.android.utils.forcePlayFromBeginning
 import app.vitune.compose.persist.persist
 import app.vitune.core.ui.Dimensions
 import app.vitune.core.ui.LocalAppearance
+import app.vitune.core.ui.utils.isLandscape
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -88,7 +89,7 @@ fun ArtistLocalSongs(
                             )
                         }
 
-                        thumbnailContent()
+                        if (!isLandscape) thumbnailContent()
                     }
                 }
 

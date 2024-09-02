@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import app.vitune.android.utils.thumbnail
+import app.vitune.core.ui.Dimensions
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.shimmer
 import app.vitune.core.ui.utils.isLandscape
@@ -37,25 +38,30 @@ inline fun LayoutWithAdaptiveThumbnail(
 fun adaptiveThumbnailContent(
     isLoading: Boolean,
     url: String?,
+    modifier: Modifier = Modifier,
     shape: Shape? = null
 ): @Composable () -> Unit = {
-    BoxWithConstraints(contentAlignment = Alignment.Center) {
+    BoxWithConstraints(
+        contentAlignment = Alignment.Center,
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 16.dp)
+    ) {
         val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
-        val thumbnailSize = if (isLandscape) (maxHeight - 128.dp) else (maxWidth - 64.dp)
+        val thumbnailSize =
+            if (isLandscape) (maxHeight - 96.dp - Dimensions.items.collapsedPlayerHeight)
+            else maxWidth
 
-        val modifier = Modifier
-            .padding(all = 16.dp)
+        val innerModifier = Modifier
             .clip(shape ?: thumbnailShape)
             .size(thumbnailSize)
 
         if (isLoading) Spacer(
-            modifier = modifier
+            modifier = innerModifier
                 .shimmer()
                 .background(colorPalette.shimmer)
         ) else AsyncImage(
             model = url?.thumbnail(thumbnailSize.px),
             contentDescription = null,
-            modifier = modifier.background(colorPalette.background1)
+            modifier = innerModifier.background(colorPalette.background1)
         )
     }
 }

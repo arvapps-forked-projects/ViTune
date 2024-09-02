@@ -52,7 +52,7 @@ fun LyricsDialog(
     val (window, error) = windowState()
 
     LaunchedEffect(window, error) {
-        if (window == null || window.mediaItem.isLocal || error != null) currentOnDismiss()
+        if (window == null || error != null) currentOnDismiss()
     }
 
     window ?: return@Dialog

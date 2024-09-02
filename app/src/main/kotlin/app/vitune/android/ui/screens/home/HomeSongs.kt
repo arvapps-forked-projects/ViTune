@@ -73,6 +73,7 @@ import app.vitune.android.utils.asMediaItem
 import app.vitune.android.utils.center
 import app.vitune.android.utils.color
 import app.vitune.android.utils.forcePlayAtIndex
+import app.vitune.android.utils.formatted
 import app.vitune.android.utils.secondary
 import app.vitune.android.utils.semiBold
 import app.vitune.compose.persist.persistList
@@ -85,19 +86,9 @@ import app.vitune.core.ui.overlay
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlin.time.Duration.Companion.milliseconds
 
-private val Song.formattedTotalPlayTime: String
-    @Composable get() {
-        val seconds = totalPlayTimeMs / 1000
-
-        val hours = seconds / 3600
-
-        return when {
-            hours == 0L -> stringResource(id = R.string.format_minutes, seconds / 60)
-            hours < 24L -> stringResource(id = R.string.format_hours, hours)
-            else -> stringResource(id = R.string.format_days, hours / 24)
-        }
-    }
+private val Song.formattedTotalPlayTime @Composable get() = totalPlayTimeMs.milliseconds.formatted
 
 @Composable
 fun HomeSongs(
@@ -301,7 +292,10 @@ fun HomeSongs(
                         )
                         .animateItemPlacement()
                         .let {
-                            if (AppearancePreferences.swipeToHideSong) it.swipeToClose(filteredItems) { animationJob ->
+                            if (AppearancePreferences.swipeToHideSong) it.swipeToClose(
+                                key = filteredItems,
+                                requireUnconsumed = true
+                            ) { animationJob ->
                                 if (AppearancePreferences.swipeToHideSongConfirm)
                                     hidingSong = song.id
                                 else {

@@ -87,6 +87,7 @@ import app.vitune.android.utils.findNextMediaItemById
 import app.vitune.android.utils.forcePlayFromBeginning
 import app.vitune.android.utils.forceSeekToNext
 import app.vitune.android.utils.forceSeekToPrevious
+import app.vitune.android.utils.get
 import app.vitune.android.utils.intent
 import app.vitune.android.utils.mediaItems
 import app.vitune.android.utils.progress
@@ -411,17 +412,18 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         eventTime: AnalyticsListener.EventTime,
         playbackStats: PlaybackStats
     ) {
-        val mediaItem = eventTime.timeline
-            .getWindow(eventTime.windowIndex, Timeline.Window())
-            .mediaItem
-
         val totalPlayTimeMs = playbackStats.totalPlayTimeMs
+        if (totalPlayTimeMs < 5000) return
 
-        if (totalPlayTimeMs > 5000 && !DataPreferences.pausePlaytime) transaction {
-            Database.incrementTotalPlayTimeMs(mediaItem.mediaId, totalPlayTimeMs)
+        val mediaItem = eventTime.timeline[eventTime.windowIndex].mediaItem
+
+        if (!DataPreferences.pausePlaytime) query {
+            runCatching {
+                Database.incrementTotalPlayTimeMs(mediaItem.mediaId, totalPlayTimeMs)
+            }
         }
 
-        if (totalPlayTimeMs > 30000 && !DataPreferences.pauseHistory) transaction {
+        if (!DataPreferences.pauseHistory) query {
             runCatching {
                 Database.insert(
                     Event(
@@ -1260,10 +1262,17 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                             .let { spec ->
                                 (chunkLength ?: format.contentLength)?.let { length ->
                                     val start = dataSpec.uriPositionOffset
+                                    val range = "$start-${start + length}"
 
                                     spec
                                         .subrange(start, length)
-                                        .withAdditionalHeaders(mapOf("Range" to "$start-${start + length}"))
+                                        .withAdditionalHeaders(mapOf("Range" to range))
+                                        .withUri(
+                                            spec.uri
+                                                .buildUpon()
+                                                .appendQueryParameter("range", range)
+                                                .build()
+                                        )
                                 } ?: spec
                             }
                     }

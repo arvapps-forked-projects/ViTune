@@ -1,22 +1,21 @@
 package app.vitune.android.ui.screens.builtinplaylist
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -26,9 +25,9 @@ import androidx.compose.ui.unit.dp
 import app.vitune.android.Database
 import app.vitune.android.LocalPlayerAwareWindowInsets
 import app.vitune.android.LocalPlayerServiceBinder
+import app.vitune.android.R
 import app.vitune.android.models.Song
 import app.vitune.android.preferences.DataPreferences
-import app.vitune.android.R
 import app.vitune.android.ui.components.LocalMenuState
 import app.vitune.android.ui.components.themed.FloatingActionsContainerWithScrollToTop
 import app.vitune.android.ui.components.themed.Header
@@ -37,11 +36,11 @@ import app.vitune.android.ui.components.themed.NonQueuedMediaItemMenu
 import app.vitune.android.ui.components.themed.SecondaryTextButton
 import app.vitune.android.ui.components.themed.ValueSelectorDialog
 import app.vitune.android.ui.items.SongItem
+import app.vitune.android.utils.PlaylistDownloadIcon
 import app.vitune.android.utils.asMediaItem
 import app.vitune.android.utils.enqueue
 import app.vitune.android.utils.forcePlayAtIndex
 import app.vitune.android.utils.forcePlayFromBeginning
-import app.vitune.android.utils.PlaylistDownloadIcon
 import app.vitune.compose.persist.persistList
 import app.vitune.core.data.enums.BuiltInPlaylist
 import app.vitune.core.ui.Dimensions
@@ -93,6 +92,8 @@ fun BuiltInPlaylistSongs(
                     .distinctUntilChanged()
                     .cancellable()
             }
+
+            BuiltInPlaylist.History -> Database.history()
         }.collect { songs = it.toImmutableList() }
     }
 
@@ -102,12 +103,16 @@ fun BuiltInPlaylistSongs(
         LazyColumn(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
-                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End).asPaddingValues(),
+                .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                .asPaddingValues(),
             modifier = Modifier
                 .background(colorPalette.background0)
                 .fillMaxSize()
         ) {
-            item(key = "header", contentType = 0) {
+            item(
+                key = "header",
+                contentType = 0
+            ) {
                 Header(
                     title = when (builtInPlaylist) {
                         BuiltInPlaylist.Favorites -> stringResource(R.string.favorites)
@@ -116,6 +121,8 @@ fun BuiltInPlaylistSongs(
                             R.string.format_my_top_playlist,
                             topListLength
                         )
+
+                        BuiltInPlaylist.History -> stringResource(R.string.history)
                     },
                     modifier = Modifier.padding(bottom = 8.dp)
                 ) {
@@ -163,44 +170,39 @@ fun BuiltInPlaylistSongs(
                 key = { _, song -> song.id },
                 contentType = { _, song -> song }
             ) { index, song ->
-                Row {
-                    SongItem(
-                        modifier = Modifier
-                            .combinedClickable(
-                                onLongClick = {
-                                    menuState.display {
-                                        when (builtInPlaylist) {
-                                            BuiltInPlaylist.Favorites -> NonQueuedMediaItemMenu(
-                                                mediaItem = song.asMediaItem,
-                                                onDismiss = menuState::hide
-                                            )
+                SongItem(
+                    modifier = Modifier
+                        .combinedClickable(
+                            onLongClick = {
+                                menuState.display {
+                                    when (builtInPlaylist) {
+                                        BuiltInPlaylist.Offline -> InHistoryMediaItemMenu(
+                                            song = song,
+                                            onDismiss = menuState::hide
+                                        )
 
-                                            BuiltInPlaylist.Offline -> InHistoryMediaItemMenu(
-                                                song = song,
-                                                onDismiss = menuState::hide
-                                            )
-
-                                            BuiltInPlaylist.Top -> NonQueuedMediaItemMenu(
-                                                mediaItem = song.asMediaItem,
-                                                onDismiss = menuState::hide
-                                            )
-                                        }
+                                        BuiltInPlaylist.Favorites,
+                                        BuiltInPlaylist.Top,
+                                        BuiltInPlaylist.History -> NonQueuedMediaItemMenu(
+                                            mediaItem = song.asMediaItem,
+                                            onDismiss = menuState::hide
+                                        )
                                     }
-                                },
-                                onClick = {
-                                    binder?.stopRadio()
-                                    binder?.player?.forcePlayAtIndex(
-                                        items = songs.map(Song::asMediaItem),
-                                        index = index
-                                    )
                                 }
-                            )
-                            .animateItemPlacement(),
-                        song = song,
-                        index = if (builtInPlaylist == BuiltInPlaylist.Top) index else null,
-                        thumbnailSize = Dimensions.thumbnails.song
-                    )
-                }
+                            },
+                            onClick = {
+                                binder?.stopRadio()
+                                binder?.player?.forcePlayAtIndex(
+                                    items = songs.map(Song::asMediaItem),
+                                    index = index
+                                )
+                            }
+                        )
+                        .animateItemPlacement(),
+                    song = song,
+                    index = if (builtInPlaylist == BuiltInPlaylist.Top) index else null,
+                    thumbnailSize = Dimensions.thumbnails.song
+                )
             }
         }
 

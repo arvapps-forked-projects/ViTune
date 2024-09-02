@@ -62,6 +62,7 @@ import app.vitune.android.R
 import app.vitune.android.models.Lyrics
 import app.vitune.android.preferences.PlayerPreferences
 import app.vitune.android.query
+import app.vitune.android.service.LOCAL_KEY_PREFIX
 import app.vitune.android.transaction
 import app.vitune.android.ui.components.LocalMenuState
 import app.vitune.android.ui.components.themed.CircularProgressIndicator
@@ -183,7 +184,12 @@ fun Lyrics(
 
                             val album = mediaMetadata.albumTitle?.toString()
                             val artist = mediaMetadata.artist?.toString().orEmpty()
-                            val title = mediaMetadata.title?.toString().orEmpty()
+                            val title = mediaMetadata.title?.toString().orEmpty().let {
+                                if (mediaId.startsWith(LOCAL_KEY_PREFIX)) it
+                                    .substringBeforeLast('.')
+                                    .trim()
+                                else it
+                            }
 
                             lyrics = null
                             isError = false
@@ -280,7 +286,14 @@ fun Lyrics(
         var error by remember { mutableStateOf(false) }
 
         var query by rememberSaveable {
-            mutableStateOf(currentMediaMetadataProvider().title?.toString().orEmpty())
+            mutableStateOf(
+                currentMediaMetadataProvider().title?.toString().orEmpty().let {
+                    if (mediaId.startsWith(LOCAL_KEY_PREFIX)) it
+                        .substringBeforeLast('.')
+                        .trim()
+                    else it
+                }
+            )
         }
 
         LaunchedEffect(query) {

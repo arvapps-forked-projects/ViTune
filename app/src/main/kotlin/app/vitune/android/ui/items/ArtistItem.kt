@@ -63,42 +63,40 @@ fun ArtistItem(
     thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     alternative: Boolean = false
+) = ItemContainer(
+    alternative = alternative,
+    thumbnailSize = thumbnailSize,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier.clip(LocalAppearance.current.thumbnailShape) then modifier
 ) {
     val (_, typography) = LocalAppearance.current
 
-    ItemContainer(
-        alternative = alternative,
-        thumbnailSize = thumbnailSize,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
+    AsyncImage(
+        model = thumbnailUrl?.thumbnail(thumbnailSize.px),
+        contentDescription = null,
+        modifier = Modifier
+            .clip(CircleShape)
+            .requiredSize(thumbnailSize)
+    )
+
+    ItemInfoContainer(
+        horizontalAlignment = if (alternative) Alignment.CenterHorizontally else Alignment.Start
     ) {
-        AsyncImage(
-            model = thumbnailUrl?.thumbnail(thumbnailSize.px),
-            contentDescription = null,
-            modifier = Modifier
-                .clip(CircleShape)
-                .requiredSize(thumbnailSize)
+        BasicText(
+            text = name.orEmpty(),
+            style = typography.xs.semiBold,
+            maxLines = if (alternative) 1 else 2,
+            overflow = TextOverflow.Ellipsis
         )
 
-        ItemInfoContainer(
-            horizontalAlignment = if (alternative) Alignment.CenterHorizontally else Alignment.Start
-        ) {
+        subscribersCount?.let {
             BasicText(
-                text = name.orEmpty(),
-                style = typography.xs.semiBold,
-                maxLines = if (alternative) 1 else 2,
-                overflow = TextOverflow.Ellipsis
+                text = subscribersCount,
+                style = typography.xxs.semiBold.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp)
             )
-
-            subscribersCount?.let {
-                BasicText(
-                    text = subscribersCount,
-                    style = typography.xxs.semiBold.secondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
         }
     }
 }

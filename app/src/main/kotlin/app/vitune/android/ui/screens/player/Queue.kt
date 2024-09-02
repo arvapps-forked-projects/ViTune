@@ -339,12 +339,14 @@ fun Queue(
                                         if (PlayerPreferences.horizontalSwipeToRemoveItem && !isPlayingThisMediaItem)
                                             it.swipeToClose(
                                                 key = windows,
-                                                delay = 100.milliseconds
+                                                delay = 100.milliseconds,
+                                                requireUnconsumed = true
                                             ) {
                                                 binder.player.removeMediaItem(window.firstPeriodIndex)
                                             }
                                         else it
-                                    }
+                                    },
+                                clip = !reorderingState.isDragging
                             )
                         }
 

@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import app.vitune.android.Database
 import app.vitune.android.models.PlaylistPreview
 import app.vitune.android.ui.components.themed.TextPlaceholder
+import app.vitune.android.utils.center
 import app.vitune.android.utils.color
 import app.vitune.android.utils.medium
 import app.vitune.android.utils.secondary
@@ -181,7 +182,7 @@ fun PlaylistItem(
 ) = ItemContainer(
     alternative = alternative,
     thumbnailSize = thumbnailSize,
-    modifier = modifier
+    modifier = Modifier.clip(LocalAppearance.current.thumbnailShape) then modifier
 ) { centeredModifier ->
     val (colorPalette, typography, thumbnailShapeCorners) = LocalAppearance.current
 
@@ -211,25 +212,20 @@ fun PlaylistItem(
         }
     }
 
-    ItemInfoContainer(
-        horizontalAlignment = if (alternative && channelName == null) Alignment.CenterHorizontally
-        else Alignment.Start
-    ) {
+    ItemInfoContainer(modifier = if (alternative && channelName.isNullOrBlank()) centeredModifier else Modifier) {
         BasicText(
             text = name.orEmpty(),
-            style = typography.xs.semiBold,
+            style = typography.xs.semiBold.let { if (alternative && channelName.isNullOrBlank()) it.center else it },
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
 
-        channelName?.let {
-            BasicText(
-                text = channelName,
-                style = typography.xs.semiBold.secondary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
+        if (channelName?.isNotBlank() == true) BasicText(
+            text = channelName,
+            style = typography.xs.semiBold.secondary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

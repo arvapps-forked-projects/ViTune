@@ -95,6 +95,7 @@ fun Modifier.onSwipe(
     decay: Density.() -> DecayAnimationSpec<Float> = { splineBasedDecay(this) },
     animationSpec: AnimationSpec<Float> = spring(),
     bounds: ClosedRange<Dp>? = null,
+    requireUnconsumed: Boolean = false,
     onSwipeOut: suspend (animationJob: Job) -> Unit
 ) = onSwipe(
     state = state,
@@ -106,6 +107,7 @@ fun Modifier.onSwipe(
     delay = delay,
     decay = decay,
     animationSpec = animationSpec,
+    requireUnconsumed = requireUnconsumed,
     bounds = bounds
 )
 
@@ -120,18 +122,21 @@ fun Modifier.onSwipe(
     delay: Duration = Duration.ZERO,
     decay: Density.() -> DecayAnimationSpec<Float> = { splineBasedDecay(this) },
     animationSpec: AnimationSpec<Float> = spring(),
-    bounds: ClosedRange<Dp>? = null
+    bounds: ClosedRange<Dp>? = null,
+    requireUnconsumed: Boolean = false
 ) = this.composed {
     val swipeState = state ?: rememberSwipeState(key)
 
     pointerInput(key) {
         coroutineScope {
+            val velocityTracker = VelocityTracker()
+
             // fling loop, doesn't really offset anything but simulates the animation beforehand
             while (isActive) {
-                val velocityTracker = VelocityTracker()
+                velocityTracker.resetTracking()
 
                 awaitPointerEventScope {
-                    val pointer = awaitFirstDown(requireUnconsumed = false).id
+                    val pointer = awaitFirstDown(requireUnconsumed = requireUnconsumed).id
                     launch { swipeState.offset.snapTo(0f) }
 
                     val onDrag: (PointerInputChange) -> Unit = {
@@ -213,6 +218,7 @@ fun Modifier.swipeToClose(
     state: SwipeState? = null,
     delay: Duration = Duration.ZERO,
     decay: Density.() -> DecayAnimationSpec<Float> = { splineBasedDecay(this) },
+    requireUnconsumed: Boolean = false,
     onClose: suspend (animationJob: Job) -> Unit
 ) = this.composed {
     val swipeState = state ?: rememberSwipeState(key)
@@ -234,6 +240,7 @@ fun Modifier.swipeToClose(
             orientation = Orientation.Horizontal,
             delay = delay,
             decay = decay,
+            requireUnconsumed = requireUnconsumed,
             bounds = bounds
         )
 }
