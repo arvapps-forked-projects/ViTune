@@ -71,7 +71,7 @@ body:
     attributes:
       label: ViTune version
       placeholder: |
-        Example: "v1.0.7"
+        Example: "v1.0.8"
     validations:
       required: true
 

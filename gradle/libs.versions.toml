@@ -1,12 +1,12 @@
 [versions]
-kotlin = "2.0.10"
-ksp = "2.0.10-1.0.24"
+kotlin = "2.0.20"
+ksp = "2.0.20-1.0.24"
 
 jvm = "17"
-agp = "8.6.0-rc01"
+agp = "8.6.0"
 
 room = "2.6.1"
-media3 = "1.4.0"
+media3 = "1.4.1"
 ktor = "2.3.12"
 detekt = "1.23.6"
 workmanager = "2.9.1"
@@ -30,7 +30,7 @@ kotlin_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", 
 kotlin_datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.6.0" }
 kotlin_immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.3.7" }
 
-compose_bom = { module = "androidx.compose:compose-bom", version = "2024.06.00" }
+compose_bom = { module = "androidx.compose:compose-bom", version = "2024.08.00" }
 compose_animation = { module = "androidx.compose.animation:animation" }
 compose_foundation = { module = "androidx.compose.foundation:foundation", version = "1.6.8" }
 compose_ui = { module = "androidx.compose.ui:ui" }
@@ -73,7 +73,7 @@ brotli = { module = "org.brotli:dec", version = "0.1.2" }
 palette = { module = "androidx.palette:palette", version = "1.0.0" }
 monet = { module = "com.github.KieronQuinn:MonetCompat", version = "0.4.1" }
 
-desugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.4" }
+desugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.1" }
 
 detekt_compose = { module = "io.nlopez.compose.rules:detekt", version = "0.4.5" }
 detekt_formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }

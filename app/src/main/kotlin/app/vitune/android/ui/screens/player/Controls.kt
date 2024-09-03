@@ -405,7 +405,7 @@ private fun MediaInfo(media: UiMedia) {
                         )
                         BasicText(
                             text = artist.name.orEmpty(),
-                            style = typography.s.semiBold.secondary,
+                            style = typography.s.bold.secondary,
                             modifier = Modifier.clickable { artistRoute.global(artist.id) }
                         )
                         if (i != artists.lastIndex && i + 1 != artists.lastIndex) BasicText(
