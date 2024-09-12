@@ -30,7 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SnapshotMutationPolicy
@@ -179,13 +179,14 @@ fun Player(
 
     OnGlobalRoute { if (layoutState.expanded) layoutState.collapseSoft() }
 
-    BottomSheet(
+    if (mediaItem != null) BottomSheet(
         state = layoutState,
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
         onDismiss = {
             binder?.let { onDismiss(it) }
             layoutState.dismissSoft()
         },
+        backHandlerEnabled = !menuState.isDisplayed,
         collapsedContent = { innerModifier ->
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -312,7 +313,7 @@ fun Player(
                                         binder?.player?.play()
                                     }
                                 },
-                                indication = rememberRipple(bounded = false),
+                                indication = ripple(bounded = false),
                                 interactionSource = remember { MutableInteractionSource() }
                             )
                             .clip(CircleShape)

@@ -22,10 +22,10 @@ fun BuiltInPlaylistScreen(builtInPlaylist: BuiltInPlaylist) {
 
     PersistMapCleanup(prefix = "${builtInPlaylist.name}/")
 
-    RouteHandler(listenToGlobalEmitter = true) {
+    RouteHandler {
         GlobalRoutes()
 
-        NavHost {
+        Content {
             Scaffold(
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,

@@ -30,13 +30,13 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.material.ripple.LocalRippleTheme
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -96,7 +96,7 @@ import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.SystemBarAppearance
 import app.vitune.core.ui.amoled
 import app.vitune.core.ui.appearance
-import app.vitune.core.ui.rippleTheme
+import app.vitune.core.ui.rippleConfiguration
 import app.vitune.core.ui.shimmerTheme
 import app.vitune.core.ui.utils.activityIntentBundle
 import app.vitune.core.ui.utils.isAtLeastAndroid12
@@ -172,7 +172,6 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
         }
 
         intent?.let { handleIntent(it) }
-        intent = null
         addOnNewIntentListener(::handleIntent)
     }
 
@@ -211,7 +210,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
     }
 
     @Suppress("CyclomaticComplexMethod")
-    @OptIn(ExperimentalLayoutApi::class)
+    @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
     fun setContent() = setContent {
         AppWrapper {
             val density = LocalDensity.current
@@ -251,8 +250,8 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
             }
 
             CompositionLocalProvider(
-                LocalIndication provides rememberRipple(),
-                LocalRippleTheme provides rippleTheme(),
+                LocalIndication provides ripple(),
+                LocalRippleConfiguration provides rippleConfiguration(),
                 LocalShimmerTheme provides shimmerTheme(),
                 LocalPlayerAwareWindowInsets provides playerAwareWindowInsets,
                 LocalLayoutDirection provides LayoutDirection.Ltr,
@@ -298,9 +297,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                 }
 
                 BottomSheetMenu(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .imePadding()
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
 
@@ -391,7 +388,14 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                         ?.let { page ->
                             page.songsPage?.items?.firstOrNull()?.album?.endpoint?.browseId
                                 ?.let { albumRoute.ensureGlobal(it) }
-                        } ?: withContext(Dispatchers.Main) { toast(getString(R.string.error_url, uri)) }
+                        } ?: withContext(Dispatchers.Main) {
+                        toast(
+                            getString(
+                                R.string.error_url,
+                                uri
+                            )
+                        )
+                    }
                     else playlistRoute.ensureGlobal(
                         p0 = browseId,
                         p1 = uri.getQueryParameter("params"),

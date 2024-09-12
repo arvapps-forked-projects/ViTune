@@ -50,10 +50,10 @@ fun SearchScreen(
 
     PersistMapCleanup(prefix = "search/")
 
-    RouteHandler(listenToGlobalEmitter = true) {
+    RouteHandler {
         GlobalRoutes()
 
-        NavHost {
+        Content {
             val decorationBox: @Composable (@Composable () -> Unit) -> Unit = { innerTextField ->
                 Box {
                     AnimatedVisibility(

@@ -56,10 +56,10 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
 
     PersistMapCleanup(prefix = "searchResults/$query/")
 
-    RouteHandler(listenToGlobalEmitter = true) {
+    RouteHandler {
         GlobalRoutes()
 
-        NavHost {
+        Content {
             val headerContent: @Composable (textButton: (@Composable () -> Unit)?) -> Unit = {
                 Header(
                     title = query,

@@ -30,10 +30,10 @@ fun LocalPlaylistScreen(playlistId: Long) {
 
     PersistMapCleanup(prefix = "localPlaylist/$playlistId/")
 
-    RouteHandler(listenToGlobalEmitter = true) {
+    RouteHandler {
         GlobalRoutes()
 
-        NavHost {
+        Content {
             var playlist by persist<Playlist?>("localPlaylist/$playlistId/playlist")
             var songs by persistList<Song>("localPlaylist/$playlistId/songs")
 

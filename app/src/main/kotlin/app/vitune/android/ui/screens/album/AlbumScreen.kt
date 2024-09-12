@@ -121,10 +121,10 @@ fun AlbumScreen(browseId: String) {
             }.collect()
     }
 
-    RouteHandler(listenToGlobalEmitter = true) {
+    RouteHandler {
         GlobalRoutes()
 
-        NavHost {
+        Content {
             val headerContent: @Composable (
                 beforeContent: (@Composable () -> Unit)?,
                 afterContent: (@Composable () -> Unit)?
