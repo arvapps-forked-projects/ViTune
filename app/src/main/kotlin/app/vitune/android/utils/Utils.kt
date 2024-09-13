@@ -23,8 +23,10 @@ import app.vitune.providers.innertube.Innertube
 import app.vitune.providers.innertube.models.bodies.ContinuationBody
 import app.vitune.providers.innertube.requests.playlistPage
 import app.vitune.providers.piped.models.Playlist
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.isActive
 import kotlin.time.Duration
 
 val Innertube.SongItem.asMediaItem: MediaItem
@@ -131,13 +133,14 @@ val Song.asMediaItem: MediaItem
         .setCustomCacheKey(id)
         .build()
 
-val Duration.formatted @Composable get() = toComponents { hours, minutes, _, _ ->
-    when {
-        hours == 0L -> stringResource(id = R.string.format_minutes, minutes)
-        hours < 24L -> stringResource(id = R.string.format_hours, hours)
-        else -> stringResource(id = R.string.format_days, hours / 24)
+val Duration.formatted
+    @Composable get() = toComponents { hours, minutes, _, _ ->
+        when {
+            hours == 0L -> stringResource(id = R.string.format_minutes, minutes)
+            hours < 24L -> stringResource(id = R.string.format_hours, hours)
+            else -> stringResource(id = R.string.format_days, hours / 24)
+        }
     }
-}
 
 fun String?.thumbnail(
     size: Int,
@@ -168,7 +171,9 @@ suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(
     var continuation = page.songsPage?.continuation
     var depth = 0
 
-    while (continuation != null && depth++ < maxDepth) {
+    val context = currentCoroutineContext()
+
+    while (continuation != null && depth++ < maxDepth && context.isActive) {
         val newSongs = Innertube
             .playlistPage(
                 body = ContinuationBody(continuation = continuation)
@@ -182,7 +187,12 @@ suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(
         continuation = newSongs.continuation
     }
 
-    page.copy(songsPage = Innertube.ItemsPage(items = songs, continuation = null))
+    page.copy(
+        songsPage = Innertube.ItemsPage(
+            items = songs,
+            continuation = null
+        )
+    )
 }.also { it.exceptionOrNull()?.printStackTrace() }
 
 fun <T> Flow<T>.onFirst(block: suspend (T) -> Unit): Flow<T> {
@@ -194,4 +204,16 @@ fun <T> Flow<T>.onFirst(block: suspend (T) -> Unit): Flow<T> {
         block(it)
         isFirst = false
     }
+}
+
+inline fun <reified T : Throwable> Throwable.findCause(): T? {
+    if (this is T) return this
+
+    var th = cause
+    while (th != null) {
+        if (th is T) return th
+        th = th.cause
+    }
+
+    return null
 }

@@ -141,6 +141,14 @@ fun OtherSettings() {
                 )
             }
         }
+        SettingsGroup(title = stringResource(R.string.playlists)) {
+            SwitchSettingsEntry(
+                title = stringResource(R.string.auto_sync_playlists),
+                text = stringResource(R.string.auto_sync_playlists_description),
+                isChecked = DataPreferences.autoSyncPlaylists,
+                onCheckedChange = { DataPreferences.autoSyncPlaylists = it }
+            )
+        }
         SettingsGroup(title = stringResource(R.string.built_in_playlists)) {
             IntSettingsEntry(
                 title = stringResource(R.string.top_list_length),
@@ -171,9 +179,7 @@ fun OtherSettings() {
             SettingsEntry(
                 title = stringResource(R.string.max_dynamic_thumbnail_size),
                 text = stringResource(R.string.max_dynamic_thumbnail_size_description),
-                onClick = {
-                    selectingThumbnailSize = true
-                }
+                onClick = { selectingThumbnailSize = true }
             )
             if (selectingThumbnailSize) SliderDialog(
                 onDismiss = { selectingThumbnailSize = false },

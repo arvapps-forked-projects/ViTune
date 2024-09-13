@@ -255,7 +255,8 @@ interface Database {
     @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY title ASC")
     fun albumsByTitleAsc(): Flow<List<Album>>
 
-    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY year ASC")
+    // authorsText as fallback for when YouTube showed the year in the artist field
+    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY year ASC, authorsText ASC")
     fun albumsByYearAsc(): Flow<List<Album>>
 
     @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY bookmarkedAt ASC")
@@ -264,7 +265,7 @@ interface Database {
     @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY title DESC")
     fun albumsByTitleDesc(): Flow<List<Album>>
 
-    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY year DESC")
+    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY year DESC, authorsText DESC")
     fun albumsByYearDesc(): Flow<List<Album>>
 
     @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY bookmarkedAt DESC")

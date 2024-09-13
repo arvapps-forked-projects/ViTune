@@ -2,9 +2,9 @@ package app.vitune.android.ui.screens.player
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
@@ -12,6 +12,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,16 +34,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.media3.common.Player
@@ -66,10 +67,9 @@ import app.vitune.core.ui.favoritesIcon
 import app.vitune.core.ui.utils.px
 import app.vitune.core.ui.utils.roundedShape
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val FORWARD_BACKWARD_OFFSET = 16f
+private val DefaultOffset = 24.dp
 
 @Composable
 fun Controls(
@@ -237,7 +237,7 @@ private fun ModernControls(
             iconId = R.drawable.play_skip_back,
             onClick = binder.player::forceSeekToPrevious,
             modifier = Modifier.weight(1f),
-            offsetOnPress = -FORWARD_BACKWARD_OFFSET
+            offsetOnPress = -DefaultOffset
         )
     }
 
@@ -306,25 +306,26 @@ private fun SkipButton(
     @DrawableRes iconId: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    offsetOnPress: Float = FORWARD_BACKWARD_OFFSET
+    offsetOnPress: Dp = DefaultOffset
 ) {
-    val scope = rememberCoroutineScope()
-    val offsetDp = remember { Animatable(0f) }
-    val density = LocalDensity.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val offset by animateDpAsState(
+        targetValue = if (pressed) offsetOnPress else 0.dp,
+        label = ""
+    )
 
     BigIconButton(
         iconId = iconId,
-        onClick = {
-            onClick()
-            scope.launch { offsetDp.animateTo(offsetOnPress) }
-        },
-        onPress = { scope.launch { offsetDp.animateTo(offsetOnPress) } },
-        onCancel = { scope.launch { offsetDp.animateTo(0f) } },
-        modifier = modifier.graphicsLayer {
-            with(density) {
-                translationX = offsetDp.value.dp.toPx()
+        modifier = modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .offset {
+                IntOffset(x = offset.roundToPx(), y = 0)
             }
-        }
     )
 }
 

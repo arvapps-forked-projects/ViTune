@@ -1,5 +1,6 @@
 package app.vitune.android.ui.modifiers
 
+import androidx.compose.foundation.Indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -12,7 +13,8 @@ import androidx.compose.ui.composed
 fun Modifier.pressable(
     onPress: () -> Unit = {},
     onCancel: () -> Unit = {},
-    onRelease: () -> Unit = {}
+    onRelease: () -> Unit = {},
+    indication: Indication? = null
 ) = this.composed {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -23,7 +25,7 @@ fun Modifier.pressable(
 
     this.clickable(
         interactionSource = interactionSource,
-        indication = null,
+        indication = indication,
         onClick = onRelease
     )
 }

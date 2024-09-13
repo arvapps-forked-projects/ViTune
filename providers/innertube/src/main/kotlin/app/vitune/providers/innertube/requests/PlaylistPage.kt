@@ -124,14 +124,14 @@ suspend fun Innertube.playlistPage(body: BrowseBody) = runCatchingCancellable {
                 ?.thumbnails
                 ?.maxByOrNull { (it.width ?: 0) * (it.height ?: 0) },
             authors = header
-                ?.subtitle
+                ?.straplineTextOne
                 ?.splitBySeparator()
-                ?.getOrNull(1)
+                ?.getOrNull(0)
                 ?.map(Innertube::Info),
             year = header
                 ?.subtitle
                 ?.splitBySeparator()
-                ?.getOrNull(2)
+                ?.getOrNull(1)
                 ?.firstOrNull()
                 ?.text,
             url = response

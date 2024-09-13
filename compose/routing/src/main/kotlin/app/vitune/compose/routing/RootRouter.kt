@@ -68,13 +68,15 @@ class RootRouter : Router {
     var current: RouteHandlerScope? by mutableStateOf(null)
 
     override val pop = {
-        current?.pop?.invoke()
-        Unit
+        route {
+            pop()
+        }
     }
 
     override val push = { route: Route? ->
-        current?.replace?.invoke(route)
-        Unit
+        route {
+            replace(route)
+        }
     }
 
     override operator fun Route0.invoke() = push(this)
@@ -102,14 +104,13 @@ class RootRouter : Router {
         p1: P1,
         p2: P2,
         p3: P3
-    ) =
-        route {
-            args[0] = p0
-            args[1] = p1
-            args[2] = p2
-            args[3] = p3
-            push(this@invoke)
-        }
+    ) = route {
+        args[0] = p0
+        args[1] = p1
+        args[2] = p2
+        args[3] = p3
+        push(this@invoke)
+    }
 }
 
 @JvmInline

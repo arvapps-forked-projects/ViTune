@@ -273,6 +273,8 @@
     <string name="format_clear_search_history_amount">Verwijder %1$s zoektermen</string>
     <string name="empty_history">Geschiedenis is leeg</string>
     <string name="built_in_playlists">Ingebouwde afspeellijsten</string>
+    <string name="auto_sync_playlists">Synchroniseer afspeellijsten automatisch</string>
+    <string name="auto_sync_playlists_description">Synchroniseert opgeslagen afspeellijsten van YouTube wanneer je ze opent</string>
     <string name="top_list_length">Lengte Top afspeellijst</string>
     <string name="top_list_length_description">Limiteert de lengte van de \'Mijn top x\' afspeellijst</string>
 

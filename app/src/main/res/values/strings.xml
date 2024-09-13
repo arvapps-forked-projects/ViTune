@@ -273,6 +273,8 @@
     <string name="format_clear_search_history_amount">Delete %1$s search queries</string>
     <string name="empty_history">History is empty</string>
     <string name="built_in_playlists">Built-in playlists</string>
+    <string name="auto_sync_playlists">Auto-sync playlists</string>
+    <string name="auto_sync_playlists_description">Automatically syncs saved playlists from YouTube when you open them</string>
     <string name="top_list_length">Top list length</string>
     <string name="top_list_length_description">Limits the length of the \'My top x\' playlist</string>
 

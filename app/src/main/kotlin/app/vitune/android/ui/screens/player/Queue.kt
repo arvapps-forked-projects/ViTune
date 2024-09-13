@@ -515,8 +515,6 @@ fun Queue(
                                     }
                                 )
 
-                                BackHandler { menuState.hide() }
-
                                 Menu {
                                     Row(
                                         horizontalArrangement = Arrangement.SpaceBetween,

@@ -17,9 +17,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -36,6 +38,7 @@ import app.vitune.android.R
 import app.vitune.android.models.Playlist
 import app.vitune.android.models.Song
 import app.vitune.android.models.SongPlaylistMap
+import app.vitune.android.preferences.DataPreferences
 import app.vitune.android.query
 import app.vitune.android.transaction
 import app.vitune.android.ui.components.LocalMenuState
@@ -71,8 +74,8 @@ import app.vitune.providers.innertube.models.bodies.BrowseBody
 import app.vitune.providers.innertube.requests.playlistPage
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -92,13 +95,24 @@ fun LocalPlaylistSongs(
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
 
+    val coroutineScope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
+
+    var loading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (DataPreferences.autoSyncPlaylists) playlist.browseId?.let { browseId ->
+            loading = true
+            sync(playlist, browseId)
+            loading = false
+        }
+    }
 
     val reorderingState = rememberReorderingState(
         lazyListState = lazyListState,
         key = songs,
         onDragEnd = { fromIndex, toIndex ->
-            query {
+            transaction {
                 Database.move(playlist.id, fromIndex, toIndex)
             }
         },
@@ -146,8 +160,6 @@ fun LocalPlaylistSongs(
                     key = "header",
                     contentType = 0
                 ) {
-                    var loading by remember { mutableStateOf(false) }
-
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Header(
                             title = playlist.name,
@@ -181,30 +193,12 @@ fun LocalPlaylistSongs(
                                                 MenuEntry(
                                                     icon = R.drawable.sync,
                                                     text = stringResource(R.string.sync),
+                                                    enabled = !loading,
                                                     onClick = {
                                                         menuState.hide()
-                                                        transaction {
+                                                        coroutineScope.launch {
                                                             loading = true
-                                                            runBlocking(Dispatchers.IO) {
-                                                                Innertube.playlistPage(
-                                                                    BrowseBody(browseId = browseId)
-                                                                )?.completed()
-                                                            }?.getOrNull()?.let { remotePlaylist ->
-                                                                Database.clearPlaylist(playlist.id)
-
-                                                                remotePlaylist.songsPage
-                                                                    ?.items
-                                                                    ?.map { it.asMediaItem }
-                                                                    ?.onEach { Database.insert(it) }
-                                                                    ?.mapIndexed { position, mediaItem ->
-                                                                        SongPlaylistMap(
-                                                                            songId = mediaItem.mediaId,
-                                                                            playlistId = playlist.id,
-                                                                            position = position
-                                                                        )
-                                                                    }
-                                                                    ?.let(Database::insertSongPlaylistMaps)
-                                                            }
+                                                            sync(playlist, browseId)
                                                             loading = false
                                                         }
                                                     }
@@ -333,4 +327,33 @@ fun LocalPlaylistSongs(
             }
         )
     }
+}
+
+private suspend fun sync(
+    playlist: Playlist,
+    browseId: String
+) = runCatching {
+    Innertube.playlistPage(
+        BrowseBody(browseId = browseId)
+    )?.completed()?.getOrNull()?.let { remotePlaylist ->
+        transaction {
+            Database.clearPlaylist(playlist.id)
+
+            remotePlaylist.songsPage
+                ?.items
+                ?.map { it.asMediaItem }
+                ?.onEach { Database.insert(it) }
+                ?.mapIndexed { position, mediaItem ->
+                    SongPlaylistMap(
+                        songId = mediaItem.mediaId,
+                        playlistId = playlist.id,
+                        position = position
+                    )
+                }
+                ?.let(Database::insertSongPlaylistMaps)
+        }
+    }
+}.onFailure {
+    if (it is CancellationException) throw it
+    it.printStackTrace()
 }

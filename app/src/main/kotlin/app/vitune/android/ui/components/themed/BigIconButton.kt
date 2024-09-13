@@ -23,10 +23,8 @@ import app.vitune.core.ui.utils.roundedShape
 @Composable
 fun BigIconButton(
     @DrawableRes iconId: Int,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onPress: (() -> Unit)? = null,
-    onCancel: (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
     backgroundColor: Color = LocalAppearance.current.colorPalette.background2,
     contentColor: Color = LocalAppearance.current.colorPalette.text,
     shape: Shape = 32.dp.roundedShape
@@ -34,12 +32,7 @@ fun BigIconButton(
     modifier
         .clip(shape)
         .let {
-            if (onPress == null && onCancel == null) it.clickable(onClick = onClick)
-            else it.pressable(
-                onPress = { onPress?.invoke() },
-                onCancel = { onCancel?.invoke() },
-                onRelease = onClick
-            )
+            if (onClick == null) it else it.clickable(onClick = onClick)
         }
         .background(backgroundColor)
         .height(64.dp),
