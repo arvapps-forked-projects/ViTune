@@ -21,6 +21,10 @@ val isLandscape
 inline val isAtLeastAndroid6
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
 
+@get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.N)
+inline val isAtLeastAndroid7
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+
 @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
 inline val isAtLeastAndroid8
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O

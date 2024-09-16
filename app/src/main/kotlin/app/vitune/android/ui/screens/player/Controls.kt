@@ -10,6 +10,7 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -39,7 +40,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -360,7 +363,7 @@ private fun PlayButton(
 
 @Composable
 private fun MediaInfo(media: UiMedia) {
-    val (_, typography) = LocalAppearance.current
+    val (colorPalette, typography) = LocalAppearance.current
 
     var artistInfo: List<Info>? by remember { mutableStateOf(null) }
     var maxHeight by rememberSaveable { mutableIntStateOf(0) }
@@ -389,15 +392,16 @@ private fun MediaInfo(media: UiMedia) {
         }
 
         AnimatedContent(
-            targetState = artistInfo,
+            targetState = media to artistInfo,
             transitionSpec = { fadeIn() togetherWith fadeOut() },
             label = ""
-        ) { state ->
+        ) { (media, state) ->
             state?.let { artists ->
                 FadingRow(
                     modifier = Modifier
                         .fillMaxWidth(0.75f)
-                        .heightIn(maxHeight.px.dp)
+                        .heightIn(maxHeight.px.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     artists.fastForEachIndexed { i, artist ->
                         if (i == artists.lastIndex && artists.size > 1) BasicText(
@@ -414,14 +418,37 @@ private fun MediaInfo(media: UiMedia) {
                             style = typography.s.semiBold.secondary
                         )
                     }
+                    if (media.explicit) {
+                        Spacer(Modifier.width(4.dp))
+
+                        Image(
+                            painter = painterResource(R.drawable.explicit),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(colorPalette.text),
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
                 }
-            } ?: FadingRow(modifier = Modifier.fillMaxWidth(0.75f)) {
+            } ?: FadingRow(
+                modifier = Modifier.fillMaxWidth(0.75f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 BasicText(
                     text = media.artist,
                     style = typography.s.semiBold.secondary,
                     maxLines = 1,
                     modifier = Modifier.onGloballyPositioned { maxHeight = it.size.height }
                 )
+                if (media.explicit) {
+                    Spacer(Modifier.width(4.dp))
+
+                    Image(
+                        painter = painterResource(R.drawable.explicit),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(colorPalette.text),
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
             }
         }
     }

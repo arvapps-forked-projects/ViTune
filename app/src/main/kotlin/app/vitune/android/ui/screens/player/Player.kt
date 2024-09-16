@@ -80,10 +80,12 @@ import app.vitune.android.ui.modifiers.PinchDirection
 import app.vitune.android.ui.modifiers.onSwipe
 import app.vitune.android.ui.modifiers.pinchToToggle
 import app.vitune.android.utils.DisposableListener
+import app.vitune.android.utils.Pip
 import app.vitune.android.utils.forceSeekToNext
 import app.vitune.android.utils.forceSeekToPrevious
 import app.vitune.android.utils.positionAndDurationState
 import app.vitune.android.utils.rememberEqualizerLauncher
+import app.vitune.android.utils.rememberPipHandler
 import app.vitune.android.utils.seamlessPlay
 import app.vitune.android.utils.secondary
 import app.vitune.android.utils.semiBold
@@ -117,6 +119,8 @@ fun Player(
     val menuState = LocalMenuState.current
     val (colorPalette, typography, thumbnailCornerSize) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
+
+    val pipHandler = rememberPipHandler()
 
     PersistMapCleanup(prefix = "queue/suggestions")
 
@@ -367,25 +371,39 @@ fun Player(
             .padding(bottom = playerBottomSheetState.collapsedBound)
 
         val thumbnailContent: @Composable (modifier: Modifier) -> Unit = { innerModifier ->
-            Thumbnail(
-                isShowingLyrics = isShowingLyrics,
-                onShowLyrics = { isShowingLyrics = it },
-                isShowingStatsForNerds = isShowingStatsForNerds,
-                onShowStatsForNerds = { isShowingStatsForNerds = it },
-                onOpenDialog = { isShowingLyricsDialog = true },
-                likedAt = likedAt,
-                setLikedAt = { likedAt = it },
+            Pip(
+                numerator = 1,
+                denominator = 1,
                 modifier = innerModifier
-                    .nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
-                    .pinchToToggle(
-                        key = isShowingLyricsDialog,
-                        direction = PinchDirection.Out,
-                        threshold = 1.05f,
-                        onPinch = {
-                            if (isShowingLyrics) isShowingLyricsDialog = true
-                        }
-                    )
-            )
+            ) {
+                Thumbnail(
+                    isShowingLyrics = isShowingLyrics,
+                    onShowLyrics = { isShowingLyrics = it },
+                    isShowingStatsForNerds = isShowingStatsForNerds,
+                    onShowStatsForNerds = { isShowingStatsForNerds = it },
+                    onOpenDialog = { isShowingLyricsDialog = true },
+                    likedAt = likedAt,
+                    setLikedAt = { likedAt = it },
+                    modifier = Modifier
+                        .nestedScroll(layoutState.preUpPostDownNestedScrollConnection)
+                        .pinchToToggle(
+                            key = isShowingLyricsDialog,
+                            direction = PinchDirection.Out,
+                            threshold = 1.05f,
+                            onPinch = {
+                                if (isShowingLyrics) isShowingLyricsDialog = true
+                            }
+                        )
+                        .pinchToToggle(
+                            key = isShowingLyricsDialog,
+                            direction = PinchDirection.In,
+                            threshold = .95f,
+                            onPinch = {
+                                pipHandler.enterPictureInPictureMode()
+                            }
+                        )
+                )
+            }
         }
 
         val controlsContent: @Composable (modifier: Modifier) -> Unit = { innerModifier ->

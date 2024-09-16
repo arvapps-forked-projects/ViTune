@@ -194,6 +194,13 @@ fun AppearanceSettings() = with(AppearancePreferences) {
                 isChecked = PlayerPreferences.lyricsShowSystemBars,
                 onCheckedChange = { PlayerPreferences.lyricsShowSystemBars = it }
             )
+
+            SwitchSettingsEntry(
+                title = stringResource(R.string.pip),
+                text = stringResource(R.string.pip_description),
+                isChecked = autoPip,
+                onCheckedChange = { autoPip = it }
+            )
         }
         SettingsGroup(title = stringResource(R.string.songs)) {
             SwitchSettingsEntry(
@@ -213,6 +220,12 @@ fun AppearanceSettings() = with(AppearancePreferences) {
                     onCheckedChange = { swipeToHideSongConfirm = it }
                 )
             }
+            SwitchSettingsEntry(
+                title = stringResource(R.string.hide_explicit),
+                text = stringResource(R.string.hide_explicit_description),
+                isChecked = hideExplicit,
+                onCheckedChange = { hideExplicit = it }
+            )
         }
     }
 }

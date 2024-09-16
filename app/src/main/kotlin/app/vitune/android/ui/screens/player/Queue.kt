@@ -1,6 +1,5 @@
 package app.vitune.android.ui.screens.player
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
@@ -65,6 +64,7 @@ import app.vitune.android.Database
 import app.vitune.android.R
 import app.vitune.android.models.Playlist
 import app.vitune.android.models.SongPlaylistMap
+import app.vitune.android.preferences.AppearancePreferences
 import app.vitune.android.preferences.PlayerPreferences
 import app.vitune.android.service.PlayerService
 import app.vitune.android.transaction
@@ -345,7 +345,8 @@ fun Queue(
                                             }
                                         else it
                                     },
-                                clip = !reorderingState.isDragging
+                                clip = !reorderingState.isDragging,
+                                hideExplicit = !isPlayingThisMediaItem && AppearancePreferences.hideExplicit
                             )
                         }
 

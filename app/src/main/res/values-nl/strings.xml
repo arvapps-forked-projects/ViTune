@@ -236,6 +236,8 @@
     <string name="lyrics_keep_screen_awake_description">Houdt het scherm aan terwijl je de songteksten leest</string>
     <string name="lyrics_show_system_bars">Toon systeembalken (songtekst)</string>
     <string name="lyrics_show_system_bars_description">Zet dit uit voor systeembreed volledig scherm</string>
+    <string name="pip">PIP</string>
+    <string name="pip_description">Zet automatisch beeld-in-beeldmodus aan wanneer de app in de achtergrond is</string>
 
     <string name="cache">Cache</string>
     <string name="cache_description">Wanneer de cache vol raakt worden de bestanden die het langst niet zijn gebruikt verwijderd</string>
@@ -373,6 +375,8 @@
     <string name="swipe_to_hide_song_description">Wanneer je een song naar links swipet wordt deze verwijderd uit de database en cache</string>
     <string name="swipe_to_hide_song_confirm">Bevestig swipen</string>
     <string name="swipe_to_hide_song_confirm_description">Als je een song swipet word je eerst om bevestiging gevraagd</string>
+    <string name="hide_explicit">Verberg expliciete nummers</string>
+    <string name="hide_explicit_description">Verbergt alle expliciete nummers in de hele app. De speler zal deze nummers ook overslaan terwijl deze instelling aanstaat.</string>
 
     <string name="version">Versie</string>
     <string name="check_new_version">Zoek naar updates</string>

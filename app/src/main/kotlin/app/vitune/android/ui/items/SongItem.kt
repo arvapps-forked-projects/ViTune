@@ -26,15 +26,16 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import app.vitune.android.R
 import app.vitune.android.models.Song
+import app.vitune.android.preferences.AppearancePreferences
 import app.vitune.android.ui.components.themed.TextPlaceholder
 import app.vitune.android.utils.medium
 import app.vitune.android.utils.secondary
 import app.vitune.android.utils.semiBold
-import app.vitune.core.ui.utils.songBundle
 import app.vitune.android.utils.thumbnail
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.shimmer
 import app.vitune.core.ui.utils.px
+import app.vitune.core.ui.utils.songBundle
 import app.vitune.providers.innertube.Innertube
 import coil.compose.AsyncImage
 
@@ -44,7 +45,8 @@ fun SongItem(
     thumbnailSize: Dp,
     modifier: Modifier = Modifier,
     showDuration: Boolean = true,
-    clip: Boolean = true
+    clip: Boolean = true,
+    hideExplicit: Boolean = AppearancePreferences.hideExplicit
 ) = SongItem(
     modifier = modifier,
     thumbnailUrl = song.thumbnail?.size(thumbnailSize.px),
@@ -54,7 +56,8 @@ fun SongItem(
     explicit = song.explicit,
     thumbnailSize = thumbnailSize,
     showDuration = showDuration,
-    clip = clip
+    clip = clip,
+    hideExplicit = hideExplicit
 )
 
 @Composable
@@ -65,7 +68,8 @@ fun SongItem(
     onThumbnailContent: (@Composable BoxScope.() -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
     showDuration: Boolean = true,
-    clip: Boolean = true
+    clip: Boolean = true,
+    hideExplicit: Boolean = AppearancePreferences.hideExplicit
 ) {
     val extras = remember(song) { song.mediaMetadata.extras?.songBundle }
 
@@ -80,7 +84,8 @@ fun SongItem(
         onThumbnailContent = onThumbnailContent,
         trailingContent = trailingContent,
         showDuration = showDuration,
-        clip = clip
+        clip = clip,
+        hideExplicit = hideExplicit
     )
 }
 
@@ -93,7 +98,8 @@ fun SongItem(
     onThumbnailContent: @Composable (BoxScope.() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
     showDuration: Boolean = true,
-    clip: Boolean = true
+    clip: Boolean = true,
+    hideExplicit: Boolean = AppearancePreferences.hideExplicit
 ) = SongItem(
     modifier = modifier,
     index = index,
@@ -106,7 +112,8 @@ fun SongItem(
     onThumbnailContent = onThumbnailContent,
     trailingContent = trailingContent,
     showDuration = showDuration,
-    clip = clip
+    clip = clip,
+    hideExplicit = hideExplicit
 )
 
 @Composable
@@ -122,7 +129,8 @@ fun SongItem(
     onThumbnailContent: @Composable (BoxScope.() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
     showDuration: Boolean = true,
-    clip: Boolean = true
+    clip: Boolean = true,
+    hideExplicit: Boolean = AppearancePreferences.hideExplicit
 ) {
     val (colorPalette, typography, _, thumbnailShape) = LocalAppearance.current
 
@@ -166,7 +174,8 @@ fun SongItem(
         modifier = modifier,
         trailingContent = trailingContent,
         showDuration = showDuration,
-        clip = clip
+        clip = clip,
+        hideExplicit = hideExplicit
     )
 }
 
@@ -181,8 +190,9 @@ fun SongItem(
     modifier: Modifier = Modifier,
     trailingContent: @Composable (() -> Unit)? = null,
     showDuration: Boolean = true,
-    clip: Boolean = true
-) = ItemContainer(
+    clip: Boolean = true,
+    hideExplicit: Boolean = AppearancePreferences.hideExplicit
+) = if (!(hideExplicit && explicit)) ItemContainer(
     alternative = false,
     thumbnailSize = thumbnailSize,
     modifier = if (clip) Modifier.clip(LocalAppearance.current.thumbnailShape) then modifier
@@ -259,7 +269,7 @@ fun SongItem(
             }
         }
     }
-}
+} else Unit
 
 @Composable
 fun SongItemPlaceholder(

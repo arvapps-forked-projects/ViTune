@@ -443,6 +443,14 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        if (
+            AppearancePreferences.hideExplicit &&
+            mediaItem?.mediaMetadata?.extras?.songBundle?.explicit == true
+        ) {
+            player.forceSeekToNext()
+            return
+        }
+
         mediaItemState.update { mediaItem }
 
         maybeRecoverPlaybackError()

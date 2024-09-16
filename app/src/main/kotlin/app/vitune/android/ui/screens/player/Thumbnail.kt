@@ -49,6 +49,7 @@ import androidx.media3.common.C
 import app.vitune.android.Database
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
+import app.vitune.android.preferences.PlayerPreferences
 import app.vitune.android.service.LoginRequiredException
 import app.vitune.android.service.PlayableFormatNotFoundException
 import app.vitune.android.service.UnplayableException
@@ -76,7 +77,13 @@ fun Thumbnail(
     onOpenDialog: () -> Unit,
     likedAt: Long?,
     setLikedAt: (Long?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.FillWidth,
+    shouldShowSynchronizedLyrics: Boolean = PlayerPreferences.isShowingSynchronizedLyrics,
+    setShouldShowSynchronizedLyrics: (Boolean) -> Unit = {
+        PlayerPreferences.isShowingSynchronizedLyrics = it
+    },
+    showLyricsControls: Boolean = true
 ) {
     val binder = LocalPlayerServiceBinder.current
     val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
@@ -166,7 +173,7 @@ fun Thumbnail(
                     ?.thumbnail((Dimensions.thumbnails.player.song - 64.dp).px),
                 error = painterResource(id = R.drawable.ic_launcher_foreground),
                 contentDescription = null,
-                contentScale = ContentScale.FillWidth,
+                contentScale = contentScale,
                 modifier = Modifier
                     .pointerInput(Unit) {
                         detectTapGestures(
@@ -202,7 +209,10 @@ fun Thumbnail(
                 mediaMetadataProvider = currentWindow.mediaItem::mediaMetadata,
                 durationProvider = { binder?.player?.duration ?: C.TIME_UNSET },
                 onOpenDialog = onOpenDialog,
-                modifier = Modifier.height(height.px.dp)
+                modifier = Modifier.height(height.px.dp),
+                shouldShowSynchronizedLyrics = shouldShowSynchronizedLyrics,
+                setShouldShowSynchronizedLyrics = setShouldShowSynchronizedLyrics,
+                showControls = showLyricsControls
             )
 
             StatsForNerds(

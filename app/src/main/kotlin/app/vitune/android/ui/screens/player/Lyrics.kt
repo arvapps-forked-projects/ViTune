@@ -119,7 +119,8 @@ fun Lyrics(
         PlayerPreferences.isShowingSynchronizedLyrics = it
     },
     shouldKeepScreenAwake: Boolean = PlayerPreferences.lyricsKeepScreenAwake,
-    shouldUpdateLyrics: Boolean = true
+    shouldUpdateLyrics: Boolean = true,
+    showControls: Boolean = true
 ) = AnimatedVisibility(
     visible = isDisplayed,
     enter = fadeIn(),
@@ -506,142 +507,144 @@ fun Lyrics(
             }
         }
 
-        if (onOpenDialog != null) Image(
-            painter = painterResource(R.drawable.expand),
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(colorPalette.onOverlay),
-            modifier = Modifier
-                .padding(all = 4.dp)
-                .clickable(
-                    indication = ripple(bounded = false),
-                    interactionSource = remember { MutableInteractionSource() },
-                    onClick = {
-                        onOpenDialog()
-                    }
-                )
-                .padding(all = 8.dp)
-                .size(20.dp)
-                .align(Alignment.BottomStart)
-        )
+        if (showControls) {
+            if (onOpenDialog != null) Image(
+                painter = painterResource(R.drawable.expand),
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(colorPalette.onOverlay),
+                modifier = Modifier
+                    .padding(all = 4.dp)
+                    .clickable(
+                        indication = ripple(bounded = false),
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {
+                            onOpenDialog()
+                        }
+                    )
+                    .padding(all = 8.dp)
+                    .size(20.dp)
+                    .align(Alignment.BottomStart)
+            )
 
-        Image(
-            painter = painterResource(R.drawable.ellipsis_horizontal),
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(colorPalette.onOverlay),
-            modifier = Modifier
-                .padding(all = 4.dp)
-                .clickable(
-                    indication = ripple(bounded = false),
-                    interactionSource = remember { MutableInteractionSource() },
-                    onClick = {
-                        onMenuLaunch()
-                        menuState.display {
-                            Menu {
-                                MenuEntry(
-                                    icon = R.drawable.time,
-                                    text = stringResource(
-                                        if (shouldShowSynchronizedLyrics) R.string.show_unsynchronized_lyrics
-                                        else R.string.show_synchronized_lyrics
-                                    ),
-                                    secondaryText = if (shouldShowSynchronizedLyrics) null
-                                    else stringResource(R.string.provided_lyrics_by),
-                                    onClick = {
-                                        menuState.hide()
-                                        setShouldShowSynchronizedLyrics(!shouldShowSynchronizedLyrics)
-                                    }
-                                )
-
-                                MenuEntry(
-                                    icon = R.drawable.pencil,
-                                    text = stringResource(R.string.edit_lyrics),
-                                    onClick = {
-                                        menuState.hide()
-                                        isEditing = true
-                                    }
-                                )
-
-                                MenuEntry(
-                                    icon = R.drawable.search,
-                                    text = stringResource(R.string.search_lyrics_online),
-                                    onClick = {
-                                        menuState.hide()
-                                        val mediaMetadata = currentMediaMetadataProvider()
-
-                                        try {
-                                            context.startActivity(
-                                                Intent(Intent.ACTION_WEB_SEARCH).apply {
-                                                    putExtra(
-                                                        SearchManager.QUERY,
-                                                        "${mediaMetadata.title} ${mediaMetadata.artist} lyrics"
-                                                    )
-                                                }
-                                            )
-                                        } catch (e: ActivityNotFoundException) {
-                                            context.toast(context.getString(R.string.no_browser_installed))
-                                        }
-                                    }
-                                )
-
-                                MenuEntry(
-                                    icon = R.drawable.sync,
-                                    text = stringResource(R.string.refetch_lyrics),
-                                    enabled = lyrics != null,
-                                    onClick = {
-                                        menuState.hide()
-
-                                        transaction {
-                                            runCatching {
-                                                currentEnsureSongInserted()
-
-                                                Database.upsert(
-                                                    if (shouldShowSynchronizedLyrics) Lyrics(
-                                                        songId = mediaId,
-                                                        fixed = lyrics?.fixed,
-                                                        synced = null
-                                                    ) else Lyrics(
-                                                        songId = mediaId,
-                                                        fixed = null,
-                                                        synced = lyrics?.synced
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    }
-                                )
-
-                                if (shouldShowSynchronizedLyrics) {
+            Image(
+                painter = painterResource(R.drawable.ellipsis_horizontal),
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(colorPalette.onOverlay),
+                modifier = Modifier
+                    .padding(all = 4.dp)
+                    .clickable(
+                        indication = ripple(bounded = false),
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {
+                            onMenuLaunch()
+                            menuState.display {
+                                Menu {
                                     MenuEntry(
-                                        icon = R.drawable.download,
-                                        text = stringResource(R.string.pick_from_lrclib),
-                                        onClick = {
-                                            menuState.hide()
-                                            isPicking = true
-                                        }
-                                    )
-                                    MenuEntry(
-                                        icon = R.drawable.play_skip_forward,
-                                        text = stringResource(R.string.set_lyrics_start_offset),
-                                        secondaryText = stringResource(
-                                            R.string.set_lyrics_start_offset_description
+                                        icon = R.drawable.time,
+                                        text = stringResource(
+                                            if (shouldShowSynchronizedLyrics) R.string.show_unsynchronized_lyrics
+                                            else R.string.show_synchronized_lyrics
                                         ),
+                                        secondaryText = if (shouldShowSynchronizedLyrics) null
+                                        else stringResource(R.string.provided_lyrics_by),
                                         onClick = {
                                             menuState.hide()
-                                            lyrics?.let {
-                                                val startTime = binder?.player?.currentPosition
-                                                query {
-                                                    Database.upsert(it.copy(startTime = startTime))
+                                            setShouldShowSynchronizedLyrics(!shouldShowSynchronizedLyrics)
+                                        }
+                                    )
+
+                                    MenuEntry(
+                                        icon = R.drawable.pencil,
+                                        text = stringResource(R.string.edit_lyrics),
+                                        onClick = {
+                                            menuState.hide()
+                                            isEditing = true
+                                        }
+                                    )
+
+                                    MenuEntry(
+                                        icon = R.drawable.search,
+                                        text = stringResource(R.string.search_lyrics_online),
+                                        onClick = {
+                                            menuState.hide()
+                                            val mediaMetadata = currentMediaMetadataProvider()
+
+                                            try {
+                                                context.startActivity(
+                                                    Intent(Intent.ACTION_WEB_SEARCH).apply {
+                                                        putExtra(
+                                                            SearchManager.QUERY,
+                                                            "${mediaMetadata.title} ${mediaMetadata.artist} lyrics"
+                                                        )
+                                                    }
+                                                )
+                                            } catch (e: ActivityNotFoundException) {
+                                                context.toast(context.getString(R.string.no_browser_installed))
+                                            }
+                                        }
+                                    )
+
+                                    MenuEntry(
+                                        icon = R.drawable.sync,
+                                        text = stringResource(R.string.refetch_lyrics),
+                                        enabled = lyrics != null,
+                                        onClick = {
+                                            menuState.hide()
+
+                                            transaction {
+                                                runCatching {
+                                                    currentEnsureSongInserted()
+
+                                                    Database.upsert(
+                                                        if (shouldShowSynchronizedLyrics) Lyrics(
+                                                            songId = mediaId,
+                                                            fixed = lyrics?.fixed,
+                                                            synced = null
+                                                        ) else Lyrics(
+                                                            songId = mediaId,
+                                                            fixed = null,
+                                                            synced = lyrics?.synced
+                                                        )
+                                                    )
                                                 }
                                             }
                                         }
                                     )
+
+                                    if (shouldShowSynchronizedLyrics) {
+                                        MenuEntry(
+                                            icon = R.drawable.download,
+                                            text = stringResource(R.string.pick_from_lrclib),
+                                            onClick = {
+                                                menuState.hide()
+                                                isPicking = true
+                                            }
+                                        )
+                                        MenuEntry(
+                                            icon = R.drawable.play_skip_forward,
+                                            text = stringResource(R.string.set_lyrics_start_offset),
+                                            secondaryText = stringResource(
+                                                R.string.set_lyrics_start_offset_description
+                                            ),
+                                            onClick = {
+                                                menuState.hide()
+                                                lyrics?.let {
+                                                    val startTime = binder?.player?.currentPosition
+                                                    query {
+                                                        Database.upsert(it.copy(startTime = startTime))
+                                                    }
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                )
-                .padding(all = 8.dp)
-                .size(20.dp)
-                .align(Alignment.BottomEnd)
-        )
+                    )
+                    .padding(all = 8.dp)
+                    .size(20.dp)
+                    .align(Alignment.BottomEnd)
+            )
+        }
     }
 }

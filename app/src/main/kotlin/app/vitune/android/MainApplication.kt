@@ -50,6 +50,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -75,17 +76,23 @@ import app.vitune.android.ui.screens.albumRoute
 import app.vitune.android.ui.screens.artistRoute
 import app.vitune.android.ui.screens.home.HomeScreen
 import app.vitune.android.ui.screens.player.Player
+import app.vitune.android.ui.screens.player.Thumbnail
 import app.vitune.android.ui.screens.playlistRoute
 import app.vitune.android.ui.screens.searchResultRoute
 import app.vitune.android.ui.screens.settingsRoute
 import app.vitune.android.utils.DisposableListener
+import app.vitune.android.utils.KeyedCrossfade
 import app.vitune.android.utils.LocalMonetCompat
 import app.vitune.android.utils.asMediaItem
 import app.vitune.android.utils.collectProvidedBitmapAsState
 import app.vitune.android.utils.forcePlay
 import app.vitune.android.utils.intent
 import app.vitune.android.utils.invokeOnReady
+import app.vitune.android.utils.isInPip
+import app.vitune.android.utils.maybeEnterPip
+import app.vitune.android.utils.maybeExitPip
 import app.vitune.android.utils.setDefaultPalette
+import app.vitune.android.utils.shouldBePlaying
 import app.vitune.android.utils.toast
 import app.vitune.compose.persist.LocalPersistMap
 import app.vitune.compose.persist.PersistMap
@@ -175,6 +182,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
         addOnNewIntentListener(::handleIntent)
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun AppWrapper(
         modifier: Modifier = Modifier,
@@ -202,7 +210,13 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
             CompositionLocalProvider(
                 LocalAppearance provides appearance,
                 LocalPlayerServiceBinder provides vm.binder,
-                LocalCredentialManager provides Dependencies.credentialManager
+                LocalCredentialManager provides Dependencies.credentialManager,
+                LocalIndication provides ripple(),
+                LocalRippleConfiguration provides rippleConfiguration(appearance = appearance),
+                LocalShimmerTheme provides shimmerTheme(),
+                LocalLayoutDirection provides LayoutDirection.Ltr,
+                LocalPersistMap provides Dependencies.application.persistMap,
+                LocalMonetCompat provides monet
             ) {
                 content()
             }
@@ -210,7 +224,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
     }
 
     @Suppress("CyclomaticComplexMethod")
-    @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalLayoutApi::class)
     fun setContent() = setContent {
         AppWrapper {
             val density = LocalDensity.current
@@ -249,56 +263,69 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                     .add(WindowInsets(bottom = bottom))
             }
 
-            CompositionLocalProvider(
-                LocalIndication provides ripple(),
-                LocalRippleConfiguration provides rippleConfiguration(),
-                LocalShimmerTheme provides shimmerTheme(),
-                LocalPlayerAwareWindowInsets provides playerAwareWindowInsets,
-                LocalLayoutDirection provides LayoutDirection.Ltr,
-                LocalPersistMap provides Dependencies.application.persistMap,
-                LocalMonetCompat provides monet
-            ) {
-                val isDownloading by downloadState.collectAsState()
+            val pip = isInPip(
+                onChanged = { if (it && vm.binder?.player?.shouldBePlaying == true) playerBottomSheetState.expandSoft() }
+            )
 
-                Box {
-                    HomeScreen(
-                        onPlaylistUrl = { url ->
-                            runCatching {
-                                handleUrl(url.toUri())
-                            }.onFailure {
-                                toast(getString(R.string.error_url, url))
+            KeyedCrossfade(state = pip) { currentPip ->
+                if (currentPip) Thumbnail(
+                    isShowingLyrics = true,
+                    onShowLyrics = { },
+                    isShowingStatsForNerds = false,
+                    onShowStatsForNerds = { },
+                    onOpenDialog = { },
+                    likedAt = null,
+                    setLikedAt = { },
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillBounds,
+                    shouldShowSynchronizedLyrics = true,
+                    setShouldShowSynchronizedLyrics = { },
+                    showLyricsControls = false
+                ) else CompositionLocalProvider(
+                    LocalPlayerAwareWindowInsets provides playerAwareWindowInsets
+                ) {
+                    val isDownloading by downloadState.collectAsState()
+
+                    Box {
+                        HomeScreen(
+                            onPlaylistUrl = { url ->
+                                runCatching {
+                                    handleUrl(url.toUri())
+                                }.onFailure {
+                                    toast(getString(R.string.error_url, url))
+                                }
                             }
-                        }
-                    )
-                }
-
-                AnimatedVisibility(
-                    visible = isDownloading,
-                    modifier = Modifier.padding(playerAwareWindowInsets.asPaddingValues())
-                ) {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.TopCenter)
-                    )
-                }
-
-                CompositionLocalProvider(
-                    LocalAppearance provides LocalAppearance.current.let {
-                        if (it.colorPalette.isDark && AppearancePreferences.darkness == Darkness.AMOLED) {
-                            it.copy(colorPalette = it.colorPalette.amoled())
-                        } else it
+                        )
                     }
-                ) {
-                    Player(
-                        layoutState = playerBottomSheetState,
+
+                    AnimatedVisibility(
+                        visible = isDownloading,
+                        modifier = Modifier.padding(playerAwareWindowInsets.asPaddingValues())
+                    ) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.TopCenter)
+                        )
+                    }
+
+                    CompositionLocalProvider(
+                        LocalAppearance provides LocalAppearance.current.let {
+                            if (it.colorPalette.isDark && AppearancePreferences.darkness == Darkness.AMOLED) {
+                                it.copy(colorPalette = it.colorPalette.amoled())
+                            } else it
+                        }
+                    ) {
+                        Player(
+                            layoutState = playerBottomSheetState,
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        )
+                    }
+
+                    BottomSheetMenu(
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
-
-                BottomSheetMenu(
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
             }
 
             vm.binder?.player.DisposableListener {
@@ -307,7 +334,10 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                         mediaItem: MediaItem?,
                         reason: Int
                     ) = when {
-                        mediaItem == null -> playerBottomSheetState.dismissSoft()
+                        mediaItem == null -> {
+                            maybeExitPip()
+                            playerBottomSheetState.dismissSoft()
+                        }
 
                         reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED &&
                                 mediaItem.mediaMetadata.extras?.songBundle?.isFromPersistentQueue != true
@@ -449,6 +479,12 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
         isInitialChange: Boolean
     ) {
         if (!isInitialChange) recreate()
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+
+        if (AppearancePreferences.autoPip && vm.binder?.player?.shouldBePlaying == true) maybeEnterPip()
     }
 }
 

@@ -236,6 +236,8 @@
     <string name="lyrics_keep_screen_awake_description">Keeps the screen awake while the lyrics are showing</string>
     <string name="lyrics_show_system_bars">Show system bars (lyrics)</string>
     <string name="lyrics_show_system_bars_description">Turning this off enables system-wide full-screen</string>
+    <string name="pip">PIP</string>
+    <string name="pip_description">Automatically switches to Picture-In-Picure mode when switching to the background</string>
 
     <string name="cache">Cache</string>
     <string name="cache_description">When the cache runs out of space, the resources that haven\'t been accessed for the longest time are cleared</string>
@@ -373,6 +375,8 @@
     <string name="swipe_to_hide_song_description">When you swipe a song to the left, it gets removed from the database and cache</string>
     <string name="swipe_to_hide_song_confirm">Confirm swipe to hide song</string>
     <string name="swipe_to_hide_song_confirm_description">When you swipe to hide, you first have to confirm</string>
+    <string name="hide_explicit">Hide explicit songs</string>
+    <string name="hide_explicit_description">Hides all explicit songs, throughout the entire app. The player will also skip explicit songs when it encounters one and this setting is enabled.</string>
 
     <string name="version">Version</string>
     <string name="check_new_version">Check for updates</string>

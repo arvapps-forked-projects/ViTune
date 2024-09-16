@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.drawable.Icon
 import androidx.core.content.ContextCompat
 import app.vitune.core.ui.utils.isAtLeastAndroid6
 import kotlin.properties.PropertyDelegateProvider
@@ -18,6 +19,9 @@ abstract class ActionReceiver(private val base: String) : BroadcastReceiver() {
 
     class Action internal constructor(
         val value: String,
+        val icon: Icon?,
+        val title: String?,
+        val contentDescription: String?,
         internal val onReceive: (Context, Intent) -> Unit
     ) {
         context(Context)
@@ -39,14 +43,24 @@ abstract class ActionReceiver(private val base: String) : BroadcastReceiver() {
             mutableActions.keys.forEach { addAction(it) }
         }
 
-    internal fun action(onReceive: (Context, Intent) -> Unit) =
-        readOnlyProvider<ActionReceiver, Action> { thisRef, property ->
-            val name = "$base.${property.name}"
-            val action = Action(name, onReceive)
+    internal fun action(
+        icon: Icon? = null,
+        title: String? = null,
+        contentDescription: String? = null,
+        onReceive: (Context, Intent) -> Unit
+    ) = readOnlyProvider<ActionReceiver, Action> { thisRef, property ->
+        val name = "$base.${property.name}"
+        val action = Action(
+            value = name,
+            onReceive = onReceive,
+            icon = icon,
+            title = title,
+            contentDescription = contentDescription
+        )
 
-            thisRef.mutableActions += name to action
-            { _, _ -> action }
-        }
+        thisRef.mutableActions += name to action
+        { _, _ -> action }
+    }
 
     override fun onReceive(context: Context, intent: Intent) {
         mutableActions[intent.action]?.onReceive?.let { it(context, intent) }

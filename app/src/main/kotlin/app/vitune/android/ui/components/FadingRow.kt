@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.vitune.android.ui.modifiers.horizontalFadingEdge
 
@@ -15,6 +16,7 @@ import app.vitune.android.ui.modifiers.horizontalFadingEdge
 inline fun FadingRow(
     modifier: Modifier = Modifier,
     segments: Int = 12,
+    verticalAlignment: Alignment.Vertical = Alignment.Top,
     content: @Composable RowScope.() -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -43,6 +45,7 @@ inline fun FadingRow(
             )
             .horizontalScroll(scrollState),
         horizontalArrangement = Arrangement.Center,
+        verticalAlignment = verticalAlignment,
         content = content
     )
 }

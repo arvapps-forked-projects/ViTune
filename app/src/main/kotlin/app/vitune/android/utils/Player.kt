@@ -5,6 +5,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
+import app.vitune.android.preferences.AppearancePreferences
+import app.vitune.core.ui.utils.songBundle
 import kotlin.time.Duration
 
 val Player.currentWindow: Timeline.Window?
@@ -60,9 +62,25 @@ fun Player.forcePlayAtIndex(
 
 fun Player.forcePlayFromBeginning(items: List<MediaItem>) = forcePlayAtIndex(items, 0)
 
-fun Player.forceSeekToPrevious() = when {
-    hasPreviousMediaItem() || currentPosition > maxSeekToPreviousPosition -> seekToPrevious()
+fun Player.forceSeekToPrevious(
+    hideExplicit: Boolean = AppearancePreferences.hideExplicit
+): Unit = when {
+    hideExplicit -> {
+        if (mediaItemCount > 1) {
+            var i = currentMediaItemIndex - 1
+            while (
+                i !in (0 until mediaItemCount) ||
+                getMediaItemAt(i).mediaMetadata.extras?.songBundle?.explicit == true
+            ) {
+                if (i <= 0) i = mediaItemCount - 1 else i--
+            }
+            seekTo(i, C.TIME_UNSET)
+        } else forceSeekToPrevious(hideExplicit = false)
+        // fall back to default behavior if there is only a single song
+    }
+    hasPreviousMediaItem() -> seekToPreviousMediaItem()
     mediaItemCount > 0 -> seekTo(mediaItemCount - 1, C.TIME_UNSET)
+    currentPosition > maxSeekToPreviousPosition -> seekToPrevious()
     else -> {}
 }
 
