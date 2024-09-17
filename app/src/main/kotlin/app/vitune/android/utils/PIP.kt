@@ -3,7 +3,6 @@ package app.vitune.android.utils
 import android.app.Activity
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Rect
@@ -53,10 +52,17 @@ fun Activity.maybeEnterPip() = when {
     }.onFailure(::logError).isSuccess
 }
 
+fun Activity.setAutoEnterPip(autoEnterIfPossible: Boolean) = if (isAtLeastAndroid12) setPictureInPictureParams(
+    PictureInPictureParams.Builder()
+        .setAutoEnterEnabled(autoEnterIfPossible)
+        .build()
+) else Unit
+
 fun Activity.setPipParams(
     rect: Rect,
     targetNumerator: Int,
     targetDenominator: Int,
+    autoEnterIfPossible: Boolean = AppearancePreferences.autoPip,
     block: PictureInPictureParams.Builder.() -> PictureInPictureParams.Builder = { this }
 ) {
     if (isAtLeastAndroid8) setPictureInPictureParams(
@@ -66,7 +72,7 @@ fun Activity.setPipParams(
             .setAspectRatio(Rational(targetNumerator, targetDenominator))
             .let {
                 if (isAtLeastAndroid12) it
-                    .setAutoEnterEnabled(AppearancePreferences.autoPip)
+                    .setAutoEnterEnabled(autoEnterIfPossible)
                     .setSeamlessResizeEnabled(false)
                 else it
             }
@@ -135,18 +141,6 @@ fun isInPip(
 }
 
 fun Modifier.pip(
-    context: Context,
-    targetNumerator: Int,
-    targetDenominator: Int,
-    actions: ActionReceiver? = null
-) = this.pip(
-    activity = context.findActivity(),
-    targetNumerator = targetNumerator,
-    targetDenominator = targetDenominator,
-    actions = actions
-)
-
-fun Modifier.pip(
     activity: Activity,
     targetNumerator: Int,
     targetDenominator: Int,
@@ -179,18 +173,20 @@ fun Pip(
     content: @Composable BoxScope.() -> Unit
 ) {
     val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
 
     DisposableEffect(context, actions) {
         val currentActions = actions ?: return@DisposableEffect onDispose { }
         currentActions.register(context)
         onDispose {
             context.unregisterReceiver(currentActions)
+            activity.setAutoEnterPip(false)
         }
     }
 
     Box(
         modifier = modifier.pip(
-            context = context,
+            activity = activity,
             targetNumerator = numerator,
             targetDenominator = denominator,
             actions = actions
