@@ -63,8 +63,10 @@ fun Player.forcePlayAtIndex(
 fun Player.forcePlayFromBeginning(items: List<MediaItem>) = forcePlayAtIndex(items, 0)
 
 fun Player.forceSeekToPrevious(
-    hideExplicit: Boolean = AppearancePreferences.hideExplicit
+    hideExplicit: Boolean = AppearancePreferences.hideExplicit,
+    seekToStart: Boolean = true
 ): Unit = when {
+    seekToStart && currentPosition > maxSeekToPreviousPosition -> seekToPrevious()
     hideExplicit -> {
         if (mediaItemCount > 1) {
             var i = currentMediaItemIndex - 1
@@ -80,7 +82,6 @@ fun Player.forceSeekToPrevious(
     }
     hasPreviousMediaItem() -> seekToPreviousMediaItem()
     mediaItemCount > 0 -> seekTo(mediaItemCount - 1, C.TIME_UNSET)
-    currentPosition > maxSeekToPreviousPosition -> seekToPrevious()
     else -> {}
 }
 

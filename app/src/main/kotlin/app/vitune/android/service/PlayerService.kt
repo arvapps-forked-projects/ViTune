@@ -16,6 +16,7 @@ import android.media.MediaMetadata
 import android.media.audiofx.AudioEffect
 import android.media.audiofx.BassBoost
 import android.media.audiofx.LoudnessEnhancer
+import android.media.audiofx.PresetReverb
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.net.Uri
@@ -33,6 +34,7 @@ import androidx.core.content.ContextCompat.startForegroundService
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.media3.common.AudioAttributes
+import androidx.media3.common.AuxEffectInfo
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
@@ -212,6 +214,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
     private var loudnessEnhancer: LoudnessEnhancer? = null
     private var bassBoost: BassBoost? = null
+    private var reverb: PresetReverb? = null
 
     private val binder = Binder()
 
@@ -327,6 +330,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
             subscribe(PlayerPreferences.bassBoostLevelProperty) { maybeBassBoost() }
             subscribe(PlayerPreferences.bassBoostProperty) { maybeBassBoost() }
+            subscribe(PlayerPreferences.reverbProperty) { maybeReverb() }
             subscribe(PlayerPreferences.isInvincibilityEnabledProperty) {
                 this@PlayerService.isInvincibilityEnabled = it
             }
@@ -680,6 +684,25 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             bassBoost?.enabled = true
         }.onFailure {
             toast(getString(R.string.error_bassboost_init))
+        }
+    }
+
+    private fun maybeReverb() {
+        if (PlayerPreferences.reverb == PlayerPreferences.Reverb.None) {
+            runCatching {
+                reverb?.enabled = false
+                player.clearAuxEffectInfo()
+                reverb?.release()
+            }
+            reverb = null
+            return
+        }
+
+        runCatching {
+            if (reverb == null) reverb = PresetReverb(1, player.audioSessionId)
+            reverb?.preset = PlayerPreferences.reverb.preset
+            reverb?.enabled = true
+            reverb?.id?.let { player.setAuxEffectInfo(AuxEffectInfo(it, 1f)) }
         }
     }
 

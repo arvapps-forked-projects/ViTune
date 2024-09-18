@@ -1,5 +1,6 @@
 package app.vitune.android.preferences
 
+import android.media.audiofx.PresetReverb
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import app.vitune.android.GlobalPreferencesHolder
@@ -22,6 +23,8 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     var bassBoost by bassBoostProperty
     val bassBoostLevelProperty = int(5)
     var bassBoostLevel by bassBoostLevelProperty
+    val reverbProperty = enum(Reverb.None)
+    var reverb by reverbProperty
     val resumePlaybackWhenDeviceConnectedProperty = boolean(false)
     var resumePlaybackWhenDeviceConnected by resumePlaybackWhenDeviceConnectedProperty
     val speedProperty = float(1f)
@@ -72,6 +75,40 @@ object PlayerPreferences : GlobalPreferencesHolder() {
         Subpixel(
             quality = 0.5f,
             displayName = { stringResource(R.string.seek_bar_quality_subpixel) }
+        )
+    }
+
+    enum class Reverb(
+        val preset: Short,
+        val displayName: @Composable () -> String
+    ) {
+        None(
+            preset = PresetReverb.PRESET_NONE,
+            displayName = { stringResource(R.string.thumbnail_roundness_none) } // TODO: rename
+        ),
+        SmallRoom(
+            preset = PresetReverb.PRESET_SMALLROOM,
+            displayName = { "Small room" }
+        ),
+        MediumRoom(
+            preset = PresetReverb.PRESET_MEDIUMROOM,
+            displayName = { "Medium room" }
+        ),
+        LargeRoom(
+            preset = PresetReverb.PRESET_LARGEROOM,
+            displayName = { "Large room" }
+        ),
+        MediumHall(
+            preset = PresetReverb.PRESET_MEDIUMHALL,
+            displayName = { "Medium hall" }
+        ),
+        LargeHall(
+            preset = PresetReverb.PRESET_LARGEHALL,
+            displayName = { "Large hall" }
+        ),
+        Plate(
+            preset = PresetReverb.PRESET_PLATE,
+            displayName = { "Plate" }
         )
     }
 }

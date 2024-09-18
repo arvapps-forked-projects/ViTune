@@ -148,6 +148,13 @@ fun PlayerSettings() = with(PlayerPreferences) {
                 )
             }
 
+            EnumValueSelectorSettingsEntry(
+                title = stringResource(R.string.reverb),
+                selectedValue = reverb,
+                onValueSelect = { reverb = it },
+                valueText = { it.displayName() }
+            )
+
             SwitchSettingsEntry(
                 title = stringResource(R.string.audio_focus),
                 text = stringResource(R.string.audio_focus_description),

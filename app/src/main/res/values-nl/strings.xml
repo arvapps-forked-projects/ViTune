@@ -321,6 +321,7 @@
     <string name="bass_boost_description">Versterk lage frequenties om luisterervaring te verbeteren</string>
     <string name="bass_boost_level">Bass boost niveau</string>
     <string name="bass_boost_level_description">Niveau (0–1000) van het versterken van lage frequenties; gebruik op eigen risico!</string>
+    <string name="reverb">Reverb</string>
     <string name="audio_focus">Audiofocus</string>
     <string name="audio_focus_description">Wanneer dit aanstaat vraagt de app systeembreed audiofocus</string>
     <string name="equalizer_description">Gebruik de equalizer van het systeem</string>

@@ -135,8 +135,7 @@ fun Thumbnail(
                 binder?.player?.forceSeekToNext()
             },
             onSwipeRight = {
-                binder?.player?.seekToDefaultPosition()
-                binder?.player?.forceSeekToPrevious()
+                binder?.player?.forceSeekToPrevious(seekToStart = false)
             }
         ),
         contentAlignment = Alignment.Center,
