@@ -184,5 +184,3 @@ class AudioMediaCursor(cursor: Cursor) : CursorDao(cursor) {
 
     val albumUri get() = ContentUris.withAppendedId(ALBUM_URI_BASE, albumId)
 }
-
-// TODO: bundle accessors?

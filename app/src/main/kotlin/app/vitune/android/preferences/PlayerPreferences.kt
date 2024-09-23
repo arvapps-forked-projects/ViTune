@@ -84,31 +84,31 @@ object PlayerPreferences : GlobalPreferencesHolder() {
     ) {
         None(
             preset = PresetReverb.PRESET_NONE,
-            displayName = { stringResource(R.string.thumbnail_roundness_none) } // TODO: rename
+            displayName = { stringResource(R.string.none) }
         ),
         SmallRoom(
             preset = PresetReverb.PRESET_SMALLROOM,
-            displayName = { "Small room" }
+            displayName = { stringResource(R.string.reverb_small_room) }
         ),
         MediumRoom(
             preset = PresetReverb.PRESET_MEDIUMROOM,
-            displayName = { "Medium room" }
+            displayName = { stringResource(R.string.reverb_medium_room) }
         ),
         LargeRoom(
             preset = PresetReverb.PRESET_LARGEROOM,
-            displayName = { "Large room" }
+            displayName = { stringResource(R.string.reverb_large_room) }
         ),
         MediumHall(
             preset = PresetReverb.PRESET_MEDIUMHALL,
-            displayName = { "Medium hall" }
+            displayName = { stringResource(R.string.reverb_medium_hall) }
         ),
         LargeHall(
             preset = PresetReverb.PRESET_LARGEHALL,
-            displayName = { "Large hall" }
+            displayName = { stringResource(R.string.reverb_large_hall) }
         ),
         Plate(
             preset = PresetReverb.PRESET_PLATE,
-            displayName = { "Plate" }
+            displayName = { stringResource(R.string.reverb_plate) }
         )
     }
 }

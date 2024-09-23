@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.text.BasicText
@@ -64,19 +63,18 @@ fun ColumnScope.TextField(
     cursorBrush = SolidColor(appearance.colorPalette.text),
     decorationBox = { innerTextField ->
         hintText?.let { text ->
-            Box(modifier = Modifier.weight(1f)) {
-                this@TextField.AnimatedVisibility(
-                    visible = value.isEmpty(),
-                    enter = fadeIn(tween(100)),
-                    exit = fadeOut(tween(100))
-                ) {
-                    BasicText(
-                        text = text,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = textStyle.secondary
-                    )
-                }
+            this@TextField.AnimatedVisibility(
+                visible = value.isEmpty(),
+                enter = fadeIn(tween(100)),
+                exit = fadeOut(tween(100)),
+                modifier = Modifier.weight(1f)
+            ) {
+                BasicText(
+                    text = text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = textStyle.secondary
+                )
             }
         }
 
@@ -122,19 +120,18 @@ fun RowScope.TextField(
     cursorBrush = SolidColor(appearance.colorPalette.text),
     decorationBox = { innerTextField ->
         hintText?.let { text ->
-            Box(modifier = Modifier.weight(1f)) {
-                this@TextField.AnimatedVisibility(
-                    visible = value.isEmpty(),
-                    enter = fadeIn(tween(100)),
-                    exit = fadeOut(tween(100))
-                ) {
-                    BasicText(
-                        text = text,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = textStyle.secondary
-                    )
-                }
+            this@TextField.AnimatedVisibility(
+                visible = value.isEmpty(),
+                enter = fadeIn(tween(100)),
+                exit = fadeOut(tween(100)),
+                modifier = Modifier.weight(1f)
+            ) {
+                BasicText(
+                    text = text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = textStyle.secondary
+                )
             }
         }
 

@@ -121,6 +121,7 @@ import com.kieronquinn.monetcompat.core.MonetCompat
 import com.kieronquinn.monetcompat.interfaces.MonetColorsChangedListener
 import com.valentinilk.shimmer.LocalShimmerTheme
 import dev.kdrag0n.monet.theme.ColorScheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -128,6 +129,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val TAG = "MainActivity"
+private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
 // Viewmodel in order to avoid recreating the entire Player state (WORKAROUND)
 class MainViewModel : ViewModel() {
@@ -287,15 +289,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                     val isDownloading by downloadState.collectAsState()
 
                     Box {
-                        HomeScreen(
-                            onPlaylistUrl = { url ->
-                                runCatching {
-                                    handleUrl(url.toUri())
-                                }.onFailure {
-                                    toast(getString(R.string.error_url, url))
-                                }
-                            }
-                        )
+                        HomeScreen()
                     }
 
                     AnimatedVisibility(
@@ -374,7 +368,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                 intent.data = null
                 extras?.text = null
 
-                handleUrl(uri)
+                handleUrl(uri, vm.awaitBinder())
             }
 
             MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH -> {
@@ -394,68 +388,6 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                 }
 
                 if (!query.isNullOrBlank()) vm.awaitBinder().playFromSearch(query)
-            }
-        }
-    }
-
-    private fun handleUrl(uri: Uri) {
-        val path = uri.pathSegments.firstOrNull()
-        Log.d(TAG, "Opening url: $uri ($path)")
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            when (path) {
-                "search" -> uri.getQueryParameter("q")?.let { query ->
-                    searchResultRoute.ensureGlobal(query)
-                }
-
-                "playlist" -> uri.getQueryParameter("list")?.let { playlistId ->
-                    val browseId = "VL$playlistId"
-
-                    if (playlistId.startsWith("OLAK5uy_")) Innertube.playlistPage(
-                        body = BrowseBody(browseId = browseId)
-                    )
-                        ?.getOrNull()
-                        ?.let { page ->
-                            page.songsPage?.items?.firstOrNull()?.album?.endpoint?.browseId
-                                ?.let { albumRoute.ensureGlobal(it) }
-                        } ?: withContext(Dispatchers.Main) {
-                        toast(
-                            getString(
-                                R.string.error_url,
-                                uri
-                            )
-                        )
-                    }
-                    else playlistRoute.ensureGlobal(
-                        p0 = browseId,
-                        p1 = uri.getQueryParameter("params"),
-                        p2 = null,
-                        p3 = playlistId.startsWith("RDCLAK5uy_")
-                    )
-                }
-
-                "channel", "c" -> uri.lastPathSegment?.let { channelId ->
-                    artistRoute.ensureGlobal(channelId)
-                }
-
-                else -> when {
-                    path == "watch" -> uri.getQueryParameter("v")
-                    uri.host == "youtu.be" -> path
-                    else -> {
-                        withContext(Dispatchers.Main) {
-                            toast(getString(R.string.error_url, uri))
-                        }
-                        null
-                    }
-                }?.let { videoId ->
-                    Innertube.song(videoId)?.getOrNull()?.let { song ->
-                        val binder = vm.awaitBinder()
-
-                        withContext(Dispatchers.Main) {
-                            binder.player.forcePlay(song.asMediaItem)
-                        }
-                    }
-                }
             }
         }
     }
@@ -488,6 +420,65 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
     }
 }
 
+context(Context)
+fun handleUrl(
+    uri: Uri,
+    binder: PlayerService.Binder?
+) {
+    val path = uri.pathSegments.firstOrNull()
+    Log.d(TAG, "Opening url: $uri ($path)")
+
+    coroutineScope.launch {
+        when (path) {
+            "search" -> uri.getQueryParameter("q")?.let { query ->
+                searchResultRoute.ensureGlobal(query)
+            }
+
+            "playlist" -> uri.getQueryParameter("list")?.let { playlistId ->
+                val browseId = "VL$playlistId"
+
+                if (playlistId.startsWith("OLAK5uy_")) Innertube.playlistPage(
+                    body = BrowseBody(browseId = browseId)
+                )
+                    ?.getOrNull()
+                    ?.let { page ->
+                        page.songsPage?.items?.firstOrNull()?.album?.endpoint?.browseId
+                            ?.let { albumRoute.ensureGlobal(it) }
+                    } ?: withContext(Dispatchers.Main) {
+                    toast(getString(R.string.error_url, uri))
+                }
+                else playlistRoute.ensureGlobal(
+                    p0 = browseId,
+                    p1 = uri.getQueryParameter("params"),
+                    p2 = null,
+                    p3 = playlistId.startsWith("RDCLAK5uy_")
+                )
+            }
+
+            "channel", "c" -> uri.lastPathSegment?.let { channelId ->
+                artistRoute.ensureGlobal(channelId)
+            }
+
+            else -> when {
+                path == "watch" -> uri.getQueryParameter("v")
+                uri.host == "youtu.be" -> path
+                else -> {
+                    withContext(Dispatchers.Main) {
+                        toast(getString(R.string.error_url, uri))
+                    }
+                    null
+                }
+            }?.let { videoId ->
+                Innertube.song(videoId)?.getOrNull()?.let { song ->
+                    withContext(Dispatchers.Main) {
+                        binder?.player?.forcePlay(song.asMediaItem)
+                    }
+                }
+            }
+        }
+    }
+}
+
 val LocalPlayerServiceBinder = staticCompositionLocalOf<PlayerService.Binder?> { null }
 val LocalPlayerAwareWindowInsets =
     compositionLocalOf<WindowInsets> { error("No player insets provided") }
@@ -497,7 +488,6 @@ class MainApplication : Application(), ImageLoaderFactory, Configuration.Provide
     override fun onCreate() {
         StrictMode.setVmPolicy(
             VmPolicy.Builder()
-                // TODO: check all intent launchers for 'unsafe' intents (new rules like 'all intents should have an action')
                 .let {
                     if (isAtLeastAndroid12) it.detectUnsafeIntentLaunch()
                     else it

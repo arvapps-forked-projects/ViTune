@@ -1,5 +1,7 @@
 package app.vitune.providers.lrclib.models
 
+import app.vitune.providers.lrclib.LrcParser
+import app.vitune.providers.lrclib.toLrcFile
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.time.Duration
@@ -12,7 +14,9 @@ data class Track(
     val duration: Double,
     val plainLyrics: String?,
     val syncedLyrics: String?
-)
+) {
+    val lrc by lazy { syncedLyrics?.let { LrcParser.parse(it)?.toLrcFile() } }
+}
 
 internal fun List<Track>.bestMatchingFor(title: String, duration: Duration) =
     firstOrNull { it.duration.toLong() == duration.inWholeSeconds }

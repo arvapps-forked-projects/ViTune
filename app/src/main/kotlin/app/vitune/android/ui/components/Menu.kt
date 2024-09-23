@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import app.vitune.android.LocalPlayerAwareWindowInsets
 import app.vitune.android.ui.modifiers.pressable
 
@@ -60,7 +61,7 @@ fun BottomSheetMenu(
 ) = BoxWithConstraints(modifier = modifier) {
     val windowInsets = LocalPlayerAwareWindowInsets.current
 
-    val height = maxHeight - 256.dp
+    val height = 0.8f * maxHeight
 
     val bottomSheetState = rememberBottomSheetState(
         dismissedBound = -windowInsets

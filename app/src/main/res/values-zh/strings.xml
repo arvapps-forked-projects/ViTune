@@ -204,7 +204,7 @@
     <string name="color_mode_system">系统</string>
 
     <string name="thumbnail_roundness">缩略图圆角</string>
-    <string name="thumbnail_roundness_none">无</string>
+    <string name="none">无</string>
     <string name="thumbnail_roundness_light">轻微</string>
     <string name="thumbnail_roundness_medium">中等</string>
     <string name="thumbnail_roundness_heavy">较重</string>
@@ -393,6 +393,12 @@
     <string name="skip_on_error_description">当发生错误时跳过当前歌曲</string>
     <string name="skip_on_error_notification">由于错误，已跳过 %s</string>
     <string name="skip_on_error_notification_unknown_song">由于错误，已跳过当前歌曲</string>
+    <string name="reverb_small_room">Small room</string>
+    <string name="reverb_medium_room">Medium room</string>
+    <string name="reverb_large_room">Large room</string>
+    <string name="reverb_medium_hall">Medium hall</string>
+    <string name="reverb_large_hall">Large hall</string>
+    <string name="reverb_plate">Plate</string>
 
     <plurals name="format_reset_blacklist_description">
         <item quantity="other">从黑名单中移除所有 %1$s 首歌曲</item>

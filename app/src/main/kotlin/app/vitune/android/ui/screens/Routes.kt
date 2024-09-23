@@ -1,13 +1,24 @@
 package app.vitune.android.ui.screens
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
+import app.vitune.android.Database
+import app.vitune.android.LocalPlayerServiceBinder
+import app.vitune.android.R
+import app.vitune.android.handleUrl
 import app.vitune.android.models.Mood
+import app.vitune.android.models.SearchQuery
+import app.vitune.android.preferences.DataPreferences
+import app.vitune.android.query
 import app.vitune.android.ui.screens.album.AlbumScreen
 import app.vitune.android.ui.screens.artist.ArtistScreen
 import app.vitune.android.ui.screens.pipedplaylist.PipedPlaylistScreen
 import app.vitune.android.ui.screens.playlist.PlaylistScreen
+import app.vitune.android.ui.screens.search.SearchScreen
 import app.vitune.android.ui.screens.searchresult.SearchResultScreen
 import app.vitune.android.ui.screens.settings.SettingsScreen
+import app.vitune.android.utils.toast
 import app.vitune.compose.routing.Route0
 import app.vitune.compose.routing.Route1
 import app.vitune.compose.routing.Route3
@@ -38,6 +49,9 @@ val settingsRoute = Route0("settingsRoute")
 
 @Composable
 fun RouteHandlerScope.GlobalRoutes() {
+    val context = LocalContext.current
+    val binder = LocalPlayerServiceBinder.current
+
     albumRoute { browseId ->
         AlbumScreen(browseId = browseId)
     }
@@ -68,6 +82,28 @@ fun RouteHandlerScope.GlobalRoutes() {
 
     settingsRoute {
         SettingsScreen()
+    }
+
+    searchRoute { initialTextInput ->
+        SearchScreen(
+            initialTextInput = initialTextInput,
+            onSearch = { query ->
+                searchResultRoute(query)
+
+                if (!DataPreferences.pauseSearchHistory) query {
+                    Database.insert(SearchQuery(query = query))
+                }
+            },
+            onViewPlaylist = { url ->
+                with(context) {
+                    runCatching {
+                        handleUrl(url.toUri(), binder)
+                    }.onFailure {
+                        toast(getString(R.string.error_url, url))
+                    }
+                }
+            }
+        )
     }
 
     searchResultRoute { query ->

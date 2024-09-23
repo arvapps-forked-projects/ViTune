@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.ksp)
 }
 
@@ -17,7 +18,7 @@ android {
         minSdk = 21
         targetSdk = 35
 
-        versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 9
+        versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 10
         versionName = project.version.toString()
 
         multiDexEnabled = true

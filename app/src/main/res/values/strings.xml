@@ -204,7 +204,7 @@
     <string name="color_mode_system">System</string>
 
     <string name="thumbnail_roundness">Thumbnail roundness</string>
-    <string name="thumbnail_roundness_none">None</string>
+    <string name="none">None</string>
     <string name="thumbnail_roundness_light">Light</string>
     <string name="thumbnail_roundness_medium">Medium</string>
     <string name="thumbnail_roundness_heavy">Heavy</string>
@@ -400,6 +400,12 @@
     <string name="skip_on_error_description">Skips the current song when there is an error.</string>
     <string name="skip_on_error_notification">Skipped %s because of an error</string>
     <string name="skip_on_error_notification_unknown_song">Skipped the current song because of an error</string>
+    <string name="reverb_small_room">Small room</string>
+    <string name="reverb_medium_room">Medium room</string>
+    <string name="reverb_large_room">Large room</string>
+    <string name="reverb_medium_hall">Medium hall</string>
+    <string name="reverb_large_hall">Large hall</string>
+    <string name="reverb_plate">Plate</string>
 
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Remove %1$s song from the blacklist</item>

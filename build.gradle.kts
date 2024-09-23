@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.kotlin.parcelize) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.lint) apply false
@@ -18,7 +19,7 @@ val clean by tasks.registering(Delete::class) {
 
 allprojects {
     group = "app.vitune"
-    version = "1.0.8"
+    version = "1.0.9"
 
     apply(plugin = "io.gitlab.arturbosch.detekt")
 

@@ -19,6 +19,7 @@ import app.vitune.android.models.Album
 import app.vitune.android.models.Song
 import app.vitune.android.models.SongAlbumMap
 import app.vitune.android.query
+import app.vitune.android.transaction
 import app.vitune.android.ui.components.themed.Header
 import app.vitune.android.ui.components.themed.HeaderIconButton
 import app.vitune.android.ui.components.themed.HeaderPlaceholder
@@ -69,14 +70,14 @@ fun AlbumScreen(browseId: String) {
 
     LaunchedEffect(Unit) {
         Database
-            .album(browseId)
+            .albumSongs(browseId)
             .distinctUntilChanged()
             .combine(
                 Database
-                    .albumSongs(browseId)
+                    .album(browseId)
                     .distinctUntilChanged()
                     .cancellable()
-            ) { currentAlbum, currentSongs ->
+            ) { currentSongs, currentAlbum ->
                 album = currentAlbum
                 songs = currentSongs.toImmutableList()
 
@@ -87,35 +88,37 @@ fun AlbumScreen(browseId: String) {
                         ?.onSuccess { newAlbumPage ->
                             albumPage = newAlbumPage
 
-                            Database.clearAlbum(browseId)
+                            transaction {
+                                Database.clearAlbum(browseId)
 
-                            Database.upsert(
-                                album = Album(
-                                    id = browseId,
-                                    title = newAlbumPage.title,
-                                    description = newAlbumPage.description,
-                                    thumbnailUrl = newAlbumPage.thumbnail?.url,
-                                    year = newAlbumPage.year,
-                                    authorsText = newAlbumPage.authors
-                                        ?.joinToString("") { it.name.orEmpty() },
-                                    shareUrl = newAlbumPage.url,
-                                    timestamp = System.currentTimeMillis(),
-                                    bookmarkedAt = album?.bookmarkedAt,
-                                    otherInfo = newAlbumPage.otherInfo
-                                ),
-                                songAlbumMaps = newAlbumPage
-                                    .songsPage
-                                    ?.items
-                                    ?.map { it.asMediaItem }
-                                    ?.onEach { Database.insert(it) }
-                                    ?.mapIndexed { position, mediaItem ->
-                                        SongAlbumMap(
-                                            songId = mediaItem.mediaId,
-                                            albumId = browseId,
-                                            position = position
-                                        )
-                                    } ?: emptyList()
-                            )
+                                Database.upsert(
+                                    album = Album(
+                                        id = browseId,
+                                        title = newAlbumPage.title,
+                                        description = newAlbumPage.description,
+                                        thumbnailUrl = newAlbumPage.thumbnail?.url,
+                                        year = newAlbumPage.year,
+                                        authorsText = newAlbumPage.authors
+                                            ?.joinToString("") { it.name.orEmpty() },
+                                        shareUrl = newAlbumPage.url,
+                                        timestamp = System.currentTimeMillis(),
+                                        bookmarkedAt = album?.bookmarkedAt,
+                                        otherInfo = newAlbumPage.otherInfo
+                                    ),
+                                    songAlbumMaps = newAlbumPage
+                                        .songsPage
+                                        ?.items
+                                        ?.map { it.asMediaItem }
+                                        ?.onEach { Database.insert(it) }
+                                        ?.mapIndexed { position, mediaItem ->
+                                            SongAlbumMap(
+                                                songId = mediaItem.mediaId,
+                                                albumId = browseId,
+                                                position = position
+                                            )
+                                        } ?: emptyList()
+                                )
+                            }
                         }?.exceptionOrNull()?.printStackTrace()
                 }
             }.collect()

@@ -21,9 +21,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.vitune.android.utils.center
 import app.vitune.android.utils.color
+import app.vitune.android.utils.isInPip
 import app.vitune.android.utils.medium
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.onOverlay
@@ -38,6 +40,7 @@ fun PlaybackError(
 ) = Box(modifier = modifier) {
     val (colorPalette, typography) = LocalAppearance.current
     val message by rememberUpdatedState(newValue = messageProvider())
+    val pip = isInPip()
 
     AnimatedVisibility(
         visible = isDisplayed,
@@ -72,7 +75,9 @@ fun PlaybackError(
             modifier = Modifier
                 .background(colorPalette.overlay.copy(alpha = 0.4f))
                 .padding(all = 8.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            maxLines = if (pip) 1 else Int.MAX_VALUE,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

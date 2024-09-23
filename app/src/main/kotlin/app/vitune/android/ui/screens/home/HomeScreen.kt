@@ -5,6 +5,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.res.stringResource
 import app.vitune.android.Database
 import app.vitune.android.R
+import app.vitune.android.handleUrl
 import app.vitune.android.models.SearchQuery
 import app.vitune.android.models.toUiMood
 import app.vitune.android.preferences.DataPreferences
@@ -29,6 +30,7 @@ import app.vitune.android.ui.screens.search.SearchScreen
 import app.vitune.android.ui.screens.searchResultRoute
 import app.vitune.android.ui.screens.searchRoute
 import app.vitune.android.ui.screens.settingsRoute
+import app.vitune.android.utils.toast
 import app.vitune.compose.persist.PersistMapCleanup
 import app.vitune.compose.routing.Route0
 import app.vitune.compose.routing.RouteHandler
@@ -38,7 +40,7 @@ private val moreAlbumsRoute = Route0("moreAlbumsRoute")
 
 @Route
 @Composable
-fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
+fun HomeScreen() {
     val saveableStateHolder = rememberSaveableStateHolder()
 
     PersistMapCleanup("home/")
@@ -52,20 +54,6 @@ fun HomeScreen(onPlaylistUrl: (String) -> Unit) {
 
         builtInPlaylistRoute { builtInPlaylist ->
             BuiltInPlaylistScreen(builtInPlaylist = builtInPlaylist)
-        }
-
-        searchRoute { initialTextInput ->
-            SearchScreen(
-                initialTextInput = initialTextInput,
-                onSearch = { query ->
-                    searchResultRoute(query)
-
-                    if (!DataPreferences.pauseSearchHistory) query {
-                        Database.insert(SearchQuery(query = query))
-                    }
-                },
-                onViewPlaylist = onPlaylistUrl
-            )
         }
 
         moodRoute { mood ->

@@ -197,7 +197,7 @@
     <string name="color_mode_system">Sistem</string>
 
     <string name="thumbnail_roundness">Kebulatan thumbnail</string>
-    <string name="thumbnail_roundness_none">Tidak ada</string>
+    <string name="none">Tidak ada</string>
     <string name="thumbnail_roundness_light">Ringan</string>
     <string name="thumbnail_roundness_medium">Sedang</string>
     <string name="thumbnail_roundness_heavy">Berat</string>
@@ -366,6 +366,12 @@
     <string name="dynamic_thumbnails">Thumbnail dinamis</string>
     <string name="max_dynamic_thumbnail_size">Ukuran maksimal thumbnail dinamis</string>
     <string name="max_dynamic_thumbnail_size_description">Ukuran maksimal thumbnail saat thumbnail dinamis digunakan</string>
+    <string name="reverb_small_room">Small room</string>
+    <string name="reverb_medium_room">Medium room</string>
+    <string name="reverb_large_room">Large room</string>
+    <string name="reverb_medium_hall">Medium hall</string>
+    <string name="reverb_large_hall">Large hall</string>
+    <string name="reverb_plate">Plate</string>
 
     <plurals name="format_reset_blacklist_description">
         <item quantity="other">Hapus semua %1$s lagu dari daftar hitam</item>

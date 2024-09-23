@@ -203,7 +203,7 @@
     <string name="color_mode_system">デバイスの設定に合わせる</string>
 
     <string name="thumbnail_roundness">サムネイルの丸み</string>
-    <string name="thumbnail_roundness_none">なし</string>
+    <string name="none">なし</string>
     <string name="thumbnail_roundness_light">20%</string>
     <string name="thumbnail_roundness_medium">35%(標準)</string>
     <string name="thumbnail_roundness_heavy">50%</string>
@@ -388,6 +388,12 @@
     <string name="skip_on_error_description">エラーが発生したときに再生中の曲をスキップする</string>
     <string name="skip_on_error_notification">エラーが発生したため %s がスキップされました</string>
     <string name="skip_on_error_notification_unknown_song">エラーが発生したため再生中の曲をスキップしました</string>
+    <string name="reverb_small_room">Small room</string>
+    <string name="reverb_medium_room">Medium room</string>
+    <string name="reverb_large_room">Large room</string>
+    <string name="reverb_medium_hall">Medium hall</string>
+    <string name="reverb_large_hall">Large hall</string>
+    <string name="reverb_plate">Plate</string>
 
     <plurals name="format_reset_blacklist_description">
         <item quantity="other">ブラックリストから %1$s の曲をすべて削除する</item>

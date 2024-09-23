@@ -260,7 +260,7 @@ val Darkness.nameLocalized
 val ThumbnailRoundness.nameLocalized
     @Composable get() = stringResource(
         when (this) {
-            ThumbnailRoundness.None -> R.string.thumbnail_roundness_none
+            ThumbnailRoundness.None -> R.string.none
             ThumbnailRoundness.Light -> R.string.thumbnail_roundness_light
             ThumbnailRoundness.Medium -> R.string.thumbnail_roundness_medium
             ThumbnailRoundness.Heavy -> R.string.thumbnail_roundness_heavy

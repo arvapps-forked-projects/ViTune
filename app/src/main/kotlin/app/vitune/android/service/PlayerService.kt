@@ -45,12 +45,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
-import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.cache.Cache
-import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.NoOpCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
@@ -87,7 +84,9 @@ import app.vitune.android.utils.InvincibleService
 import app.vitune.android.utils.TimerJob
 import app.vitune.android.utils.YouTubeRadio
 import app.vitune.android.utils.activityPendingIntent
+import app.vitune.android.utils.asDataSource
 import app.vitune.android.utils.broadcastPendingIntent
+import app.vitune.android.utils.defaultDataSource
 import app.vitune.android.utils.findCause
 import app.vitune.android.utils.findNextMediaItemById
 import app.vitune.android.utils.forcePlayFromBeginning
@@ -95,6 +94,7 @@ import app.vitune.android.utils.forceSeekToNext
 import app.vitune.android.utils.forceSeekToPrevious
 import app.vitune.android.utils.get
 import app.vitune.android.utils.handleRangeErrors
+import app.vitune.android.utils.handleUnknownErrors
 import app.vitune.android.utils.intent
 import app.vitune.android.utils.mediaItems
 import app.vitune.android.utils.progress
@@ -1218,125 +1218,105 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             context: Context,
             cache: Cache,
             chunkLength: Long? = DEFAULT_CHUNK_LENGTH,
-            ringBuffer: RingBuffer<Pair<String, Uri>?> = RingBuffer(2) { null }
+            uriCache: RingBuffer<Pair<String, Uri>?> = RingBuffer(16) { null }
         ): DataSource.Factory = ResolvingDataSource.Factory(
             ConditionalCacheDataSourceFactory(
-                cacheDataSourceFactory = CacheDataSource.Factory().setCache(cache),
-                upstreamDataSourceFactory = DefaultDataSource.Factory(
-                    /* context = */ context,
-                    /* baseDataSourceFactory = */ DefaultHttpDataSource.Factory()
-                        .setConnectTimeoutMs(16000)
-                        .setReadTimeoutMs(8000)
-                        .setUserAgent("Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0")
-                )
+                cacheDataSourceFactory = cache.asDataSource,
+                upstreamDataSourceFactory = context.defaultDataSource
             ) { !it.isLocal }
         ) { dataSpec ->
-            runCatching {
-                // Thank you Android, for enforcing a Uri in the download request
-                val videoId = dataSpec.key?.removePrefix("https://youtube.com/watch?v=")
-                    ?: error("A key must be set")
+            val mediaId = dataSpec.key?.removePrefix("https://youtube.com/watch?v=")
+                ?: error("A key must be set")
 
-                when {
-                    dataSpec.isLocal || cache.isCached(
-                        videoId,
-                        dataSpec.position,
-                        chunkLength ?: DEFAULT_CHUNK_LENGTH
-                    ) -> dataSpec
+            if (
+                dataSpec.isLocal || cache.isCached(
+                    /* key = */ mediaId,
+                    /* position = */ dataSpec.position,
+                    /* length = */ chunkLength ?: DEFAULT_CHUNK_LENGTH
+                )
+            ) dataSpec else uriCache
+                .find { it?.first == mediaId }
+                ?.second
+                ?.let { dataSpec.withUri(it) } ?: run {
+                val body = runBlocking(Dispatchers.IO) {
+                    Innertube.player(PlayerBody(videoId = mediaId))
+                }?.getOrThrow()
 
-                    videoId == ringBuffer[0]?.first ->
-                        dataSpec.withUri(ringBuffer[0]!!.second)
+                if (body?.videoDetails?.videoId != mediaId) throw VideoIdMismatchException()
 
-                    videoId == ringBuffer[1]?.first ->
-                        dataSpec.withUri(ringBuffer[1]!!.second)
+                val format = body.streamingData?.highestQualityFormat ?: throw PlayableFormatNotFoundException()
+                val url = when (val status = body.playabilityStatus?.status) {
+                    "OK" -> {
+                        val mediaItem = runCatching { findMediaItem(mediaId) }.getOrNull()
+                        val extras = mediaItem?.mediaMetadata?.extras?.songBundle
 
-                    else -> {
-                        val body = runBlocking(Dispatchers.IO) {
-                            Innertube.player(PlayerBody(videoId = videoId))
-                        }?.getOrThrow()
+                        if (extras?.durationText == null) format.approxDurationMs
+                            ?.div(1000)
+                            ?.let(DateUtils::formatElapsedTime)
+                            ?.removePrefix("0")
+                            ?.let { durationText ->
+                                extras?.durationText = durationText
+                                Database.updateDurationText(mediaId, durationText)
+                            }
 
-                        if (body?.videoDetails?.videoId != videoId) throw VideoIdMismatchException()
+                        transaction {
+                            runCatching {
+                                mediaItem?.let(Database::insert)
 
-                        val format = body.streamingData?.highestQualityFormat
-                        val url = when (val status = body.playabilityStatus?.status) {
-                            "OK" -> format?.let { _ ->
-                                val mediaItem = runCatching { findMediaItem(videoId) }.getOrNull()
-                                val extras = mediaItem?.mediaMetadata?.extras?.songBundle
-
-                                if (extras?.durationText == null) format.approxDurationMs
-                                    ?.div(1000)
-                                    ?.let(DateUtils::formatElapsedTime)
-                                    ?.removePrefix("0")
-                                    ?.let { durationText ->
-                                        extras?.durationText = durationText
-                                        Database.updateDurationText(videoId, durationText)
-                                    }
-
-                                transaction {
-                                    runCatching {
-                                        mediaItem?.let(Database::insert)
-
-                                        Database.insert(
-                                            Format(
-                                                songId = videoId,
-                                                itag = format.itag,
-                                                mimeType = format.mimeType,
-                                                bitrate = format.bitrate,
-                                                loudnessDb = body.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                                contentLength = format.contentLength,
-                                                lastModified = format.lastModified
-                                            )
-                                        )
-                                    }
-                                }
-
-                                format.url
-                            } ?: throw PlayableFormatNotFoundException()
-
-                            "UNPLAYABLE" -> throw UnplayableException()
-                            "LOGIN_REQUIRED" -> throw LoginRequiredException()
-
-                            else -> throw PlaybackException(
-                                status,
-                                null,
-                                PlaybackException.ERROR_CODE_REMOTE_ERROR
-                            )
+                                Database.insert(
+                                    Format(
+                                        songId = mediaId,
+                                        itag = format.itag,
+                                        mimeType = format.mimeType,
+                                        bitrate = format.bitrate,
+                                        loudnessDb = body.playerConfig?.audioConfig?.normalizedLoudnessDb,
+                                        contentLength = format.contentLength,
+                                        lastModified = format.lastModified
+                                    )
+                                )
+                            }
                         }
 
-                        ringBuffer += videoId to url.toUri()
-                        dataSpec.buildUpon()
-                            .setKey(videoId)
-                            .setUri(url.toUri())
-                            .build()
-                            .let { spec ->
-                                format.contentLength?.let { contentLength ->
-                                    val start = dataSpec.uriPositionOffset
-                                    val length = (contentLength - start).coerceAtMost(
-                                        chunkLength ?: (contentLength - start)
-                                    )
-                                    val range = "$start-${start + length}"
-
-                                    spec
-                                        .subrange(start, length)
-                                        .withAdditionalHeaders(mapOf("Range" to range))
-                                        .withUri(
-                                            spec.uri
-                                                .buildUpon()
-                                                .appendQueryParameter("range", range)
-                                                .build()
-                                        )
-                                } ?: spec
-                            }
+                        format.url
                     }
-                }
-            }.getOrElse {
-                it.printStackTrace()
 
-                if (it is PlaybackException) throw it else throw PlaybackException(
-                    /* message = */ "Unknown playback error",
-                    /* cause = */ it,
-                    /* errorCode = */ PlaybackException.ERROR_CODE_UNSPECIFIED
-                )
+                    "UNPLAYABLE" -> throw UnplayableException()
+                    "LOGIN_REQUIRED" -> throw LoginRequiredException()
+
+                    else -> throw PlaybackException(
+                        /* message = */ status,
+                        /* cause = */ null,
+                        /* errorCode = */ PlaybackException.ERROR_CODE_REMOTE_ERROR
+                    )
+                } ?: throw UnplayableException()
+
+                uriCache += mediaId to url.toUri()
+                dataSpec.buildUpon()
+                    .setKey(mediaId)
+                    .setUri(url.toUri())
+                    .build()
+                    .let { spec ->
+                        format.contentLength?.let { contentLength ->
+                            val start = dataSpec.uriPositionOffset
+                            val length = (contentLength - start).coerceAtMost(
+                                chunkLength ?: (contentLength - start)
+                            )
+                            val range = "$start-${start + length}"
+
+                            spec
+                                .subrange(start, length)
+                                .withAdditionalHeaders(mapOf("Range" to range))
+                                .withUri(
+                                    spec.uri
+                                        .buildUpon()
+                                        .appendQueryParameter("range", range)
+                                        .build()
+                                )
+                        } ?: spec
+                    }
             }
-        }.handleRangeErrors()
+        }
+            .handleUnknownErrors()
+            .handleRangeErrors()
     }
 }

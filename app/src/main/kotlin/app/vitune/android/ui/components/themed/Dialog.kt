@@ -66,63 +66,61 @@ fun TextFieldDialog(
     onCancel: () -> Unit = onDismiss,
     isTextInputValid: (String) -> Boolean = { it.isNotEmpty() },
     keyboardOptions: KeyboardOptions = KeyboardOptions()
+) = DefaultDialog(
+    onDismiss = onDismiss,
+    modifier = modifier
 ) {
     val focusRequester = remember { FocusRequester() }
     val (_, typography) = LocalAppearance.current
 
     var value by rememberSaveable(initialTextInput) { mutableStateOf(initialTextInput) }
 
-    DefaultDialog(
-        onDismiss = onDismiss,
-        modifier = modifier
-    ) {
-        TextField(
-            value = value,
-            onValueChange = { value = it },
-            textStyle = typography.xs.semiBold.center,
-            singleLine = singleLine,
-            maxLines = maxLines,
-            hintText = hintText,
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    if (isTextInputValid(value)) {
-                        onDismiss()
-                        onAccept(value)
-                    }
-                }
-            ),
-            keyboardOptions = keyboardOptions,
-            modifier = Modifier
-                .padding(all = 16.dp)
-                .weight(weight = 1f, fill = false)
-                .focusRequester(focusRequester)
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            DialogTextButton(
-                text = cancelText,
-                onClick = onCancel
-            )
-
-            DialogTextButton(
-                primary = true,
-                text = doneText,
-                onClick = {
-                    if (isTextInputValid(value)) {
-                        onDismiss()
-                        onAccept(value)
-                    }
-                }
-            )
-        }
-    }
-
     LaunchedEffect(Unit) {
         delay(300)
         focusRequester.requestFocus()
+    }
+
+    TextField(
+        value = value,
+        onValueChange = { value = it },
+        textStyle = typography.xs.semiBold.center,
+        singleLine = singleLine,
+        maxLines = maxLines,
+        hintText = hintText,
+        keyboardActions = KeyboardActions(
+            onDone = {
+                if (isTextInputValid(value)) {
+                    onDismiss()
+                    onAccept(value)
+                }
+            }
+        ),
+        keyboardOptions = keyboardOptions,
+        modifier = Modifier
+            .padding(all = 16.dp)
+            .weight(weight = 1f, fill = false)
+            .focusRequester(focusRequester)
+    )
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        DialogTextButton(
+            text = cancelText,
+            onClick = onCancel
+        )
+
+        DialogTextButton(
+            primary = true,
+            text = doneText,
+            onClick = {
+                if (isTextInputValid(value)) {
+                    onDismiss()
+                    onAccept(value)
+                }
+            }
+        )
     }
 }
 

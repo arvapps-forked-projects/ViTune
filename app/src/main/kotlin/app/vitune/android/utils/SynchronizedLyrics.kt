@@ -1,10 +1,13 @@
 package app.vitune.android.utils
 
+import android.os.Parcelable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.parcelize.Parcelize
 
 @Stable
 class SynchronizedLyrics(
@@ -32,3 +35,10 @@ class SynchronizedLyrics(
         } else false
     }
 }
+
+@Parcelize
+@Immutable
+data class SynchronizedLyricsState(
+    val sentences: Map<Long, String>?,
+    val offset: Long
+) : Parcelable
