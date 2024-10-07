@@ -4,6 +4,7 @@ package app.vitune.android.utils
 
 import android.content.Context
 import androidx.annotation.OptIn
+import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
@@ -13,19 +14,26 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
+import java.io.EOFException
 
 class RangeHandlerDataSourceFactory(private val parent: DataSource.Factory) : DataSource.Factory {
     class Source(private val parent: DataSource) : DataSource by parent {
         override fun open(dataSpec: DataSpec) = runCatching {
             parent.open(dataSpec)
         }.getOrElse { e ->
-            if (e.findCause<InvalidResponseCodeException>()?.responseCode == 416) parent.open(
+            if (
+                e.findCause<EOFException>() != null ||
+                e.findCause<InvalidResponseCodeException>()?.responseCode == 416
+            ) parent.open(
                 dataSpec
-                    .withRequestHeaders(
+                    .buildUpon()
+                    .setHttpRequestHeaders(
                         dataSpec.httpRequestHeaders.filter {
                             it.key.equals("range", ignoreCase = true)
                         }
                     )
+                    .setLength(C.LENGTH_UNSET.toLong())
+                    .build()
             )
             else throw e
         }
@@ -34,19 +42,22 @@ class RangeHandlerDataSourceFactory(private val parent: DataSource.Factory) : Da
     override fun createDataSource() = Source(parent.createDataSource())
 }
 
-class CatchingDataSourceFactory(private val parent: DataSource.Factory) : DataSource.Factory {
-    class Source(private val parent: DataSource) : DataSource by parent {
+class CatchingDataSourceFactory(
+    private val parent: DataSource.Factory,
+    private val onError: ((Throwable) -> Unit)?
+) : DataSource.Factory {
+    inner class Source(private val parent: DataSource) : DataSource by parent {
         override fun open(dataSpec: DataSpec) = runCatching {
             parent.open(dataSpec)
-        }.getOrElse {
-            it.printStackTrace()
+        }.getOrElse { ex ->
+            ex.printStackTrace()
 
-            if (it is PlaybackException) throw it
+            if (ex is PlaybackException) throw ex
             else throw PlaybackException(
                 /* message = */ "Unknown playback error",
-                /* cause = */ it,
+                /* cause = */ ex,
                 /* errorCode = */ PlaybackException.ERROR_CODE_UNSPECIFIED
-            )
+            ).also { onError?.invoke(it) }
         }
     }
 
@@ -54,7 +65,12 @@ class CatchingDataSourceFactory(private val parent: DataSource.Factory) : DataSo
 }
 
 fun DataSource.Factory.handleRangeErrors(): DataSource.Factory = RangeHandlerDataSourceFactory(this)
-fun DataSource.Factory.handleUnknownErrors(): DataSource.Factory = CatchingDataSourceFactory(this)
+fun DataSource.Factory.handleUnknownErrors(
+    onError: ((Throwable) -> Unit)? = null
+): DataSource.Factory = CatchingDataSourceFactory(
+    parent = this,
+    onError = onError
+)
 
 val Cache.asDataSource get() = CacheDataSource.Factory().setCache(this)
 

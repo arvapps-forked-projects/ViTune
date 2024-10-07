@@ -246,6 +246,8 @@
     <string name="format_cache_space_used">%1$s gebruikt</string>
     <string name="format_cache_space_used_percentage">%1$s gebruikt (%2$s%%)</string>
     <string name="song_cache">Songcache</string>
+    <string name="pause_song_cache">Pauzeer cache</string>
+    <string name="pause_song_cache_description">Voeg tijdelijk geen nieuwe nummers toe aan de cache</string>
     <string name="database">Database</string>
 
     <string name="cleanup">Opruimen</string>

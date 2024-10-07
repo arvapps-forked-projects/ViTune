@@ -19,7 +19,6 @@ import android.media.audiofx.LoudnessEnhancer
 import android.media.audiofx.PresetReverb
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
@@ -98,6 +97,7 @@ import app.vitune.android.utils.handleUnknownErrors
 import app.vitune.android.utils.intent
 import app.vitune.android.utils.mediaItems
 import app.vitune.android.utils.progress
+import app.vitune.android.utils.readOnlyWhen
 import app.vitune.android.utils.setPlaybackPitch
 import app.vitune.android.utils.shouldBePlaying
 import app.vitune.android.utils.thumbnail
@@ -105,7 +105,7 @@ import app.vitune.android.utils.timer
 import app.vitune.android.utils.toast
 import app.vitune.compose.preferences.SharedPreferencesProperty
 import app.vitune.core.data.enums.ExoPlayerDiskCacheSize
-import app.vitune.core.data.utils.RingBuffer
+import app.vitune.core.data.utils.UriCache
 import app.vitune.core.ui.utils.EqualizerIntentBundleAccessor
 import app.vitune.core.ui.utils.isAtLeastAndroid10
 import app.vitune.core.ui.utils.isAtLeastAndroid12
@@ -148,9 +148,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import java.io.IOException
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import android.os.Binder as AndroidBinder
 
 const val LOCAL_KEY_PREFIX = "local:"
@@ -940,7 +942,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     private fun createMediaSourceFactory() = DefaultMediaSourceFactory(
         /* dataSourceFactory = */ createYouTubeDataSourceResolverFactory(
             findMediaItem = { videoId ->
-                runBlocking(Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
                     player.findNextMediaItemById(videoId)
                 }
             },
@@ -1186,68 +1188,79 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     companion object {
+        private const val DEFAULT_CACHE_DIRECTORY = "exoplayer"
+        private const val DEFAULT_CHUNK_LENGTH = 512 * 1024L
+
         fun createDatabaseProvider(context: Context) = StandaloneDatabaseProvider(context)
-        fun createCache(context: Context) = with(context) {
-            val cacheEvictor = when (val size = DataPreferences.exoPlayerDiskCacheMaxSize) {
+        fun createCache(
+            context: Context,
+            directoryName: String = DEFAULT_CACHE_DIRECTORY,
+            size: ExoPlayerDiskCacheSize = DataPreferences.exoPlayerDiskCacheMaxSize
+        ) = with(context) {
+            val cacheEvictor = when (size) {
                 ExoPlayerDiskCacheSize.Unlimited -> NoOpCacheEvictor()
                 else -> LeastRecentlyUsedCacheEvictor(size.bytes)
             }
 
-            val directory = cacheDir.resolve("exoplayer").apply {
+            val directory = cacheDir.resolve(directoryName).apply {
                 if (!exists()) mkdir()
             }
 
             SimpleCache(directory, cacheEvictor, createDatabaseProvider(context))
         }
 
-        private const val DEFAULT_CHUNK_LENGTH = 512 * 1024L
-
-        // TODO: maybe fix this mess?
-        /**
-         * Creates a ResolvingDataSource.Factory for YouTube video's
-         * Call site MUST either:
-         * 1. Verify that the consumer of the factory always saves the MediaItem to the database
-         * before trying to resolve the MediaItem
-         * 2. Provide a usable MediaItem for the YouTube video with the videoId
-         * 3. Make sure the database has a MediaItem for the given videoId and return null when it
-         * does
-         */
-        @Suppress("CyclomaticComplexMethod")
         fun createYouTubeDataSourceResolverFactory(
-            findMediaItem: (videoId: String) -> MediaItem?,
             context: Context,
             cache: Cache,
             chunkLength: Long? = DEFAULT_CHUNK_LENGTH,
-            uriCache: RingBuffer<Pair<String, Uri>?> = RingBuffer(16) { null }
+            findMediaItem: suspend (videoId: String) -> MediaItem? = { null },
+            uriCache: UriCache<String, Long?> = UriCache()
         ): DataSource.Factory = ResolvingDataSource.Factory(
             ConditionalCacheDataSourceFactory(
-                cacheDataSourceFactory = cache.asDataSource,
-                upstreamDataSourceFactory = context.defaultDataSource
-            ) { !it.isLocal }
+                cacheDataSourceFactory = cache.readOnlyWhen { PlayerPreferences.pauseCache }.asDataSource,
+                upstreamDataSourceFactory = context.defaultDataSource,
+                shouldCache = { !it.isLocal }
+            )
         ) { dataSpec ->
             val mediaId = dataSpec.key?.removePrefix("https://youtube.com/watch?v=")
                 ?: error("A key must be set")
 
+            fun DataSpec.ranged(contentLength: Long?) = contentLength?.let {
+                if (chunkLength == null) return@let null
+
+                val start = dataSpec.uriPositionOffset
+                val length = (contentLength - start).coerceAtMost(chunkLength)
+                val rangeText = "$start-${start + length}"
+
+                this.subrange(start, length)
+                    .withAdditionalHeaders(mapOf("Range" to "bytes=$rangeText"))
+            } ?: this
+
             if (
-                dataSpec.isLocal || cache.isCached(
+                dataSpec.isLocal || ((chunkLength != null) && cache.isCached(
                     /* key = */ mediaId,
                     /* position = */ dataSpec.position,
-                    /* length = */ chunkLength ?: DEFAULT_CHUNK_LENGTH
-                )
-            ) dataSpec else uriCache
-                .find { it?.first == mediaId }
-                ?.second
-                ?.let { dataSpec.withUri(it) } ?: run {
+                    /* length = */ chunkLength
+                ))
+            ) dataSpec
+            else uriCache[mediaId]?.let { cachedUri ->
+                dataSpec
+                    .withUri(cachedUri.uri)
+                    .ranged(cachedUri.meta)
+            } ?: run {
                 val body = runBlocking(Dispatchers.IO) {
                     Innertube.player(PlayerBody(videoId = mediaId))
                 }?.getOrThrow()
 
                 if (body?.videoDetails?.videoId != mediaId) throw VideoIdMismatchException()
 
-                val format = body.streamingData?.highestQualityFormat ?: throw PlayableFormatNotFoundException()
+                val format = body.streamingData?.highestQualityFormat
+                    ?: throw PlayableFormatNotFoundException()
                 val url = when (val status = body.playabilityStatus?.status) {
                     "OK" -> {
-                        val mediaItem = runCatching { findMediaItem(mediaId) }.getOrNull()
+                        val mediaItem = runCatching {
+                            runBlocking(Dispatchers.IO) { findMediaItem(mediaId) }
+                        }.getOrNull()
                         val extras = mediaItem?.mediaMetadata?.extras?.songBundle
 
                         if (extras?.durationText == null) format.approxDurationMs
@@ -1290,33 +1303,23 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     )
                 } ?: throw UnplayableException()
 
-                uriCache += mediaId to url.toUri()
-                dataSpec.buildUpon()
-                    .setKey(mediaId)
-                    .setUri(url.toUri())
-                    .build()
-                    .let { spec ->
-                        format.contentLength?.let { contentLength ->
-                            val start = dataSpec.uriPositionOffset
-                            val length = (contentLength - start).coerceAtMost(
-                                chunkLength ?: (contentLength - start)
-                            )
-                            val range = "$start-${start + length}"
+                val uri = url.toUri()
 
-                            spec
-                                .subrange(start, length)
-                                .withAdditionalHeaders(mapOf("Range" to range))
-                                .withUri(
-                                    spec.uri
-                                        .buildUpon()
-                                        .appendQueryParameter("range", range)
-                                        .build()
-                                )
-                        } ?: spec
-                    }
+                uriCache.push(
+                    key = mediaId,
+                    meta = format.contentLength,
+                    uri = uri,
+                    validUntil = body.streamingData?.expiresInSeconds?.seconds?.let { Clock.System.now() + it }
+                )
+
+                dataSpec
+                    .withUri(uri)
+                    .ranged(format.contentLength)
             }
         }
-            .handleUnknownErrors()
+            .handleUnknownErrors {
+                uriCache.clear()
+            }
             .handleRangeErrors()
     }
 }

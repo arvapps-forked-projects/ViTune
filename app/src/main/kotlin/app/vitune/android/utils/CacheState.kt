@@ -36,6 +36,8 @@ import app.vitune.android.ui.components.themed.HeaderIconButton
 import app.vitune.core.ui.LocalAppearance
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 @Composable
 fun PlaylistDownloadIcon(
@@ -113,10 +115,21 @@ class ConditionalCacheDataSourceFactory(
         private lateinit var selectedFactory: DataSource.Factory
         private val transferListeners = mutableListOf<TransferListener>()
 
-        private val source by lazy {
-            selectedFactory.createDataSource().apply {
-                transferListeners.forEach { addTransferListener(it) }
-                transferListeners.clear()
+        private fun createSource(factory: DataSource.Factory = selectedFactory) = factory.createDataSource().apply {
+            transferListeners.forEach { addTransferListener(it) }
+        }
+
+        private var source by object : ReadWriteProperty<Any?, DataSource> {
+            var s: DataSource? = null
+
+            override fun getValue(thisRef: Any?, property: KProperty<*>) = s ?: run {
+                val newSource = createSource()
+                s = newSource
+                newSource
+            }
+
+            override fun setValue(thisRef: Any?, property: KProperty<*>, value: DataSource) {
+                s = value
             }
         }
 
@@ -125,14 +138,22 @@ class ConditionalCacheDataSourceFactory(
 
         override fun addTransferListener(transferListener: TransferListener) {
             if (::selectedFactory.isInitialized) source.addTransferListener(transferListener)
-            else transferListeners += transferListener
+
+            transferListeners += transferListener
         }
 
         override fun open(dataSpec: DataSpec): Long {
             selectedFactory =
                 if (shouldCache(dataSpec)) cacheDataSourceFactory else upstreamDataSourceFactory
 
-            return source.open(dataSpec)
+            return runCatching {
+                source.open(dataSpec)
+            }.getOrElse {
+                if (it is ReadOnlyException) {
+                    source = createSource(upstreamDataSourceFactory)
+                    source.open(dataSpec)
+                } else throw it
+            }
         }
 
         override fun getUri() = source.uri

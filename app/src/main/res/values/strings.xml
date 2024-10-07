@@ -246,6 +246,8 @@
     <string name="format_cache_space_used">%1$s used</string>
     <string name="format_cache_space_used_percentage">%1$s used (%2$s%%)</string>
     <string name="song_cache">Song cache</string>
+    <string name="pause_song_cache">Pause cache</string>
+    <string name="pause_song_cache_description">Temporarily pauses new songs being added to cache</string>
     <string name="database">Database</string>
 
     <string name="cleanup">Cleanup</string>

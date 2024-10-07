@@ -147,6 +147,7 @@ dependencies {
 
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.immutable)
+    implementation(libs.kotlin.datetime)
 
     implementation(libs.room)
     ksp(libs.room.compiler)

@@ -18,6 +18,7 @@ import androidx.media3.common.util.UnstableApi
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.preferences.DataPreferences
+import app.vitune.android.preferences.PlayerPreferences
 import app.vitune.android.ui.components.themed.LinearProgressIndicator
 import app.vitune.android.ui.screens.Route
 import app.vitune.core.data.enums.ExoPlayerDiskCacheSize
@@ -102,6 +103,12 @@ fun CacheSettings() = with(DataPreferences) {
                     title = stringResource(R.string.max_size),
                     selectedValue = exoPlayerDiskCacheMaxSize,
                     onValueSelect = { exoPlayerDiskCacheMaxSize = it }
+                )
+                SwitchSettingsEntry(
+                    title = stringResource(R.string.pause_song_cache),
+                    text = stringResource(R.string.pause_song_cache_description),
+                    isChecked = PlayerPreferences.pauseCache,
+                    onCheckedChange = { PlayerPreferences.pauseCache = it }
                 )
             }
         }

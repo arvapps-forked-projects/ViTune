@@ -19,7 +19,6 @@ suspend fun Innertube.player(
 ) = runCatchingCancellable {
     val response = client.post(PLAYER) {
         setBody(body)
-        mask("playabilityStatus.status,playerConfig.audioConfig,streamingData.adaptiveFormats,videoDetails.videoId")
     }.body<PlayerResponse>()
 
     if (response.playabilityStatus?.status == "OK") return@runCatchingCancellable response
@@ -33,7 +32,6 @@ suspend fun Innertube.player(
                 )
             )
         )
-        mask("playabilityStatus.status,playerConfig.audioConfig,streamingData.adaptiveFormats,videoDetails.videoId")
     }.body<PlayerResponse>()
 
     if (safePlayerResponse.playabilityStatus?.status != "OK") return@runCatchingCancellable response
