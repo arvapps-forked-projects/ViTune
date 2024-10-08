@@ -22,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.LocalPinnableContainer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -73,7 +75,8 @@ fun OnlineSearch(
     onSearch: (String) -> Unit,
     onViewPlaylist: (String) -> Unit,
     decorationBox: @Composable (@Composable () -> Unit) -> Unit,
-    modifier: Modifier = Modifier
+    focused: Boolean,
+    modifier: Modifier = Modifier,
 ) = Box(modifier = modifier) {
     val (colorPalette, typography) = LocalAppearance.current
 
@@ -109,11 +112,6 @@ fun OnlineSearch(
     val focusRequester = remember { FocusRequester() }
     val lazyListState = rememberLazyListState()
 
-    LaunchedEffect(Unit) {
-        delay(300)
-        focusRequester.requestFocus()
-    }
-
     LazyColumn(
         state = lazyListState,
         contentPadding = LocalPlayerAwareWindowInsets.current
@@ -125,6 +123,23 @@ fun OnlineSearch(
             key = "header",
             contentType = 0
         ) {
+            val container = LocalPinnableContainer.current
+
+            DisposableEffect(Unit) {
+                val handle = container?.pin()
+
+                onDispose {
+                    handle?.release()
+                }
+            }
+
+            LaunchedEffect(focused) {
+                if (!focused) return@LaunchedEffect
+
+                delay(300)
+                focusRequester.requestFocus()
+            }
+
             Header(
                 titleContent = {
                     BasicTextField(
@@ -175,6 +190,7 @@ fun OnlineSearch(
                     .clickable { onSearch(searchQuery.query) }
                     .fillMaxWidth()
                     .padding(all = 16.dp)
+                    .animateItem()
             ) {
                 Spacer(
                     modifier = Modifier

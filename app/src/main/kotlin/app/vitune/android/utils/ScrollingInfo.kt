@@ -12,7 +12,8 @@ import androidx.compose.runtime.setValue
 
 data class ScrollingInfo(
     val isScrollingDown: Boolean = false,
-    val isFar: Boolean = false
+    val isFar: Boolean = false,
+    val isReversed: Boolean = false
 )
 
 @Composable
@@ -32,7 +33,8 @@ fun LazyListState.scrollingInfo(key: Any = Unit): ScrollingInfo {
 
             ScrollingInfo(
                 isScrollingDown = isScrollingDown,
-                isFar = isFar
+                isFar = isFar,
+                isReversed = layoutInfo.reverseLayout
             )
         }
     }.value
@@ -55,7 +57,8 @@ fun LazyGridState.scrollingInfo(key: Any = Unit): ScrollingInfo {
 
             ScrollingInfo(
                 isScrollingDown = isScrollingDown,
-                isFar = isFar
+                isFar = isFar,
+                isReversed = layoutInfo.reverseLayout
             )
         }
     }.value
@@ -72,7 +75,8 @@ fun ScrollState.scrollingInfo(key: Any = Unit): ScrollingInfo {
 
             ScrollingInfo(
                 isScrollingDown = isScrollingDown,
-                isFar = false
+                isFar = false,
+                isReversed = false
             )
         }
     }.value

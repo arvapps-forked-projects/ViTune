@@ -298,6 +298,8 @@
     <string name="troubleshooting_warning">Caution: use these buttons as a last resort when audio playback fails</string>
     <string name="reload_app_internals">Reload app internals</string>
     <string name="kill_app">Kill app</string>
+    <string name="show_logs">View debug logs</string>
+    <string name="logs">Logs</string>
     <string name="show_troubleshoot_section">Show troubleshoot section</string>
 
     <string name="persistent_queue">Persistent queue</string>

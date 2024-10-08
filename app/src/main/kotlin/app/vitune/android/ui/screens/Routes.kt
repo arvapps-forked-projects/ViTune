@@ -17,6 +17,7 @@ import app.vitune.android.ui.screens.pipedplaylist.PipedPlaylistScreen
 import app.vitune.android.ui.screens.playlist.PlaylistScreen
 import app.vitune.android.ui.screens.search.SearchScreen
 import app.vitune.android.ui.screens.searchresult.SearchResultScreen
+import app.vitune.android.ui.screens.settings.LogsScreen
 import app.vitune.android.ui.screens.settings.SettingsScreen
 import app.vitune.android.utils.toast
 import app.vitune.compose.routing.Route0
@@ -40,6 +41,7 @@ val albumRoute = Route1<String>("albumRoute")
 val artistRoute = Route1<String>("artistRoute")
 val builtInPlaylistRoute = Route1<BuiltInPlaylist>("builtInPlaylistRoute")
 val localPlaylistRoute = Route1<Long>("localPlaylistRoute")
+val logsRoute = Route0("logsRoute")
 val pipedPlaylistRoute = Route3<String, String, String>("pipedPlaylistRoute")
 val playlistRoute = Route4<String, String?, Int?, Boolean>("playlistRoute")
 val moodRoute = Route1<Mood>("moodRoute")
@@ -58,6 +60,10 @@ fun RouteHandlerScope.GlobalRoutes() {
 
     artistRoute { browseId ->
         ArtistScreen(browseId = browseId)
+    }
+
+    logsRoute {
+        LogsScreen()
     }
 
     pipedPlaylistRoute { apiBaseUrl, sessionToken, playlistId ->

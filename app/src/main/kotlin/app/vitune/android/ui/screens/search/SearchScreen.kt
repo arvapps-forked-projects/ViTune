@@ -90,7 +90,8 @@ fun SearchScreen(
                             onTextFieldValueChange = onTextFieldValueChanged,
                             onSearch = onSearch,
                             onViewPlaylist = onViewPlaylist,
-                            decorationBox = decorationBox
+                            decorationBox = decorationBox,
+                            focused = child == null
                         )
 
                         1 -> LocalSongSearch(

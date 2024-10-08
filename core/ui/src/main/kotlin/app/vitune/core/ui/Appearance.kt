@@ -2,20 +2,18 @@ package app.vitune.core.ui
 
 import android.app.Activity
 import android.graphics.Bitmap
+import android.os.Parcelable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import app.vitune.core.ui.utils.isAtLeastAndroid6
 import app.vitune.core.ui.utils.isAtLeastAndroid8
@@ -23,30 +21,19 @@ import app.vitune.core.ui.utils.isCompositionLaunched
 import app.vitune.core.ui.utils.roundedShape
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Immutable
 data class Appearance(
     val colorPalette: ColorPalette,
     val typography: Typography,
-    val thumbnailShapeCorners: Dp
-) {
+    val thumbnailShapeCorners: ParcelableDp
+) : Parcelable {
+    @IgnoredOnParcel
     val thumbnailShape = thumbnailShapeCorners.roundedShape
     operator fun component4() = thumbnailShape
-
-    companion object AppearanceSaver : Saver<Appearance, List<Any>> {
-        @Suppress("UNCHECKED_CAST")
-        override fun restore(value: List<Any>) = Appearance(
-            colorPalette = ColorPalette.Saver.restore(value[0] as List<Any>),
-            typography = Typography.restore(value[1] as List<Any>),
-            thumbnailShapeCorners = (value[2] as Float).dp
-        )
-
-        override fun SaverScope.save(value: Appearance) = listOf(
-            with(ColorPalette.Saver) { save(value.colorPalette) },
-            with(Typography.Companion) { save(value.typography) },
-            value.thumbnailShapeCorners.value
-        )
-    }
 }
 
 val LocalAppearance = staticCompositionLocalOf<Appearance> { error("No appearance provided") }
@@ -54,15 +41,9 @@ val LocalAppearance = staticCompositionLocalOf<Appearance> { error("No appearanc
 @Composable
 inline fun rememberAppearance(
     vararg keys: Any = arrayOf(Unit),
-    saver: Saver<Appearance, out Any> = Appearance.AppearanceSaver,
     isDark: Boolean = isSystemInDarkTheme(),
     crossinline provide: (isSystemInDarkTheme: Boolean) -> Appearance
-) = rememberSaveable(
-    keys,
-    isCompositionLaunched(),
-    isDark,
-    stateSaver = saver
-) {
+) = rememberSaveable(keys, isCompositionLaunched(), isDark) {
     mutableStateOf(provide(isDark))
 }
 
@@ -82,7 +63,7 @@ fun appearance(
         mode == ColorMode.Dark || (mode == ColorMode.System && isSystemInDarkTheme)
     }
 
-    val colorPalette = remember(
+    val colorPalette = rememberSaveable(
         source,
         darkness,
         isDark,

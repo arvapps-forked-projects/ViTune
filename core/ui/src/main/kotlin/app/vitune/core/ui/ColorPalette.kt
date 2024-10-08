@@ -1,59 +1,37 @@
 package app.vitune.core.ui
 
 import android.graphics.Bitmap
+import android.os.Parcel
+import android.os.Parcelable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.palette.graphics.Palette
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.WriteWith
 
+typealias ParcelableColor = @WriteWith<ColorParceler> Color
+typealias ParcelableDp = @WriteWith<DpParceler> Dp
+
+@Parcelize
 @Immutable
 data class ColorPalette(
-    val background0: Color,
-    val background1: Color,
-    val background2: Color,
-    val accent: Color,
-    val onAccent: Color,
-    val red: Color = Color(0xffbf4040),
-    val blue: Color = Color(0xff4472cf),
-    val text: Color,
-    val textSecondary: Color,
-    val textDisabled: Color,
+    val background0: ParcelableColor,
+    val background1: ParcelableColor,
+    val background2: ParcelableColor,
+    val accent: ParcelableColor,
+    val onAccent: ParcelableColor,
+    val red: ParcelableColor = Color(0xffbf4040),
+    val blue: ParcelableColor = Color(0xff4472cf),
+    val yellow: ParcelableColor = Color(0xfffff176),
+    val text: ParcelableColor,
+    val textSecondary: ParcelableColor,
+    val textDisabled: ParcelableColor,
     val isDefault: Boolean,
     val isDark: Boolean
-) {
-    object Saver : androidx.compose.runtime.saveable.Saver<ColorPalette, List<Any>> {
-        override fun restore(value: List<Any>) = ColorPalette(
-            background0 = Color(value[0] as Int),
-            background1 = Color(value[1] as Int),
-            background2 = Color(value[2] as Int),
-            accent = Color(value[3] as Int),
-            onAccent = Color(value[4] as Int),
-            red = Color(value[5] as Int),
-            blue = Color(value[6] as Int),
-            text = Color(value[7] as Int),
-            textSecondary = Color(value[8] as Int),
-            textDisabled = Color(value[9] as Int),
-            isDefault = value[10] as Boolean,
-            isDark = value[11] as Boolean
-        )
-
-        override fun SaverScope.save(value: ColorPalette) = listOf(
-            value.background0.toArgb(),
-            value.background1.toArgb(),
-            value.background2.toArgb(),
-            value.accent.toArgb(),
-            value.onAccent.toArgb(),
-            value.red.toArgb(),
-            value.blue.toArgb(),
-            value.text.toArgb(),
-            value.textSecondary.toArgb(),
-            value.textDisabled.toArgb(),
-            value.isDefault,
-            value.isDark
-        )
-    }
-}
+) : Parcelable
 
 private val defaultAccentColor = Color(0xff3e44ce).hsl
 
@@ -279,3 +257,13 @@ inline val ColorPalette.onOverlay get() = defaultDarkPalette.text
 
 @Suppress("UnusedReceiverParameter")
 inline val ColorPalette.onOverlayShimmer get() = defaultDarkPalette.shimmer
+
+object ColorParceler : Parceler<Color> {
+    override fun Color.write(parcel: Parcel, flags: Int) = parcel.writeLong(value.toLong())
+    override fun create(parcel: Parcel) = Color(parcel.readLong())
+}
+
+object DpParceler : Parceler<Dp> {
+    override fun Dp.write(parcel: Parcel, flags: Int) = parcel.writeFloat(value)
+    override fun create(parcel: Parcel) = parcel.readFloat().dp
+}

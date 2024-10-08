@@ -47,6 +47,7 @@ import app.vitune.android.ui.components.themed.SecondaryTextButton
 import app.vitune.android.ui.components.themed.SliderDialog
 import app.vitune.android.ui.components.themed.SliderDialogBody
 import app.vitune.android.ui.screens.Route
+import app.vitune.android.ui.screens.logsRoute
 import app.vitune.android.utils.findActivity
 import app.vitune.android.utils.intent
 import app.vitune.android.utils.isIgnoringBatteryOptimizations
@@ -297,6 +298,20 @@ fun OtherSettings() {
                             delay(500L)
                             Handler(Looper.getMainLooper()).postAtFrontOfQueue { exitProcess(0) }
                         }
+                    },
+                    enabled = !reloading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp)
+                        .padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                SecondaryTextButton(
+                    text = stringResource(R.string.show_logs),
+                    onClick = {
+                        logsRoute.global()
                     },
                     enabled = !reloading,
                     modifier = Modifier

@@ -5,8 +5,6 @@ import android.os.Parcelable
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.PlatformTextStyle
@@ -18,41 +16,52 @@ import androidx.compose.ui.text.googlefonts.Font
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.text.googlefonts.isAvailableOnDevice
 import androidx.compose.ui.unit.sp
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.parcelableCreator
 
+@Parcelize
 @Immutable
 data class Typography(
-    val xxs: TextStyle,
-    val xs: TextStyle,
-    val s: TextStyle,
-    val m: TextStyle,
-    val l: TextStyle,
-    val xxl: TextStyle,
+    internal val style: TextStyle,
     internal val fontFamily: BuiltInFontFamily
-) {
+) : Parcelable {
+    val xxs by lazy { style.copy(fontSize = 12.sp) }
+    val xs by lazy { style.copy(fontSize = 14.sp) }
+    val s by lazy { style.copy(fontSize = 16.sp) }
+    val m by lazy { style.copy(fontSize = 18.sp) }
+    val l by lazy { style.copy(fontSize = 20.sp) }
+    val xxl by lazy { style.copy(fontSize = 32.sp) }
+
     fun copy(color: Color) = Typography(
-        xxs = xxs.copy(color = color),
-        xs = xs.copy(color = color),
-        s = s.copy(color = color),
-        m = m.copy(color = color),
-        l = l.copy(color = color),
-        xxl = xxl.copy(color = color),
+        style = style.copy(color = color),
         fontFamily = fontFamily
     )
 
-    companion object : Saver<Typography, List<Any>> {
-        override fun restore(value: List<Any>) = typographyOf(
-            Color((value[0] as Long).toULong()),
-            value[1] as BuiltInFontFamily,
-            value[2] as Boolean
-        )
+    companion object : Parceler<Typography> {
+        override fun Typography.write(parcel: Parcel, flags: Int) = SavedTypography(
+            color = style.color,
+            fontFamily = fontFamily,
+            includeFontPadding = style.platformStyle?.paragraphStyle?.includeFontPadding ?: false
+        ).writeToParcel(parcel, flags)
 
-        override fun SaverScope.save(value: Typography) = listOf(
-            value.xxs.color.value.toLong(),
-            value.fontFamily,
-            value.xxs.platformStyle?.paragraphStyle?.includeFontPadding ?: false
-        )
+        override fun create(parcel: Parcel) =
+            parcelableCreator<SavedTypography>().createFromParcel(parcel).let {
+                typographyOf(
+                    color = it.color,
+                    fontFamily = it.fontFamily,
+                    applyFontPadding = it.includeFontPadding
+                )
+            }
     }
 }
+
+@Parcelize
+data class SavedTypography(
+    val color: ParcelableColor,
+    val fontFamily: BuiltInFontFamily,
+    val includeFontPadding: Boolean
+) : Parcelable
 
 private val googleFontsProvider = GoogleFont.Provider(
     providerAuthority = "com.google.android.gms.fonts",
@@ -68,7 +77,10 @@ fun googleFontsAvailable(): Boolean {
         googleFontsProvider.isAvailableOnDevice(context.applicationContext)
     }.getOrElse {
         it.printStackTrace()
-        if (it is IllegalStateException) Log.e("Typography", "Google Fonts certificates don't match. Is the user using a VPN?")
+        if (it is IllegalStateException) Log.e(
+            "Typography",
+            "Google Fonts certificates don't match. Is the user using a VPN?"
+        )
         false
     }
 }
@@ -98,6 +110,7 @@ private val poppinsFonts = listOf(
 
 private val poppinsFontFamily = FontFamily(poppinsFonts)
 
+@Parcelize
 enum class BuiltInFontFamily(internal val googleFont: GoogleFont?) : Parcelable {
     Poppins(null),
     Roboto(GoogleFont("Roboto")),
@@ -106,12 +119,9 @@ enum class BuiltInFontFamily(internal val googleFont: GoogleFont?) : Parcelable 
     Rubik(GoogleFont("Rubik")),
     System(null);
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) = parcel.writeString(name)
-    override fun describeContents() = 0
-
-    companion object CREATOR : Parcelable.Creator<BuiltInFontFamily> {
-        override fun createFromParcel(parcel: Parcel) = BuiltInFontFamily.valueOf(parcel.readString()!!)
-        override fun newArray(size: Int): Array<BuiltInFontFamily?> = arrayOfNulls(size)
+    companion object : Parceler<BuiltInFontFamily> {
+        override fun BuiltInFontFamily.write(parcel: Parcel, flags: Int) = parcel.writeString(name)
+        override fun create(parcel: Parcel) = BuiltInFontFamily.valueOf(parcel.readString()!!)
     }
 }
 
@@ -164,12 +174,7 @@ fun typographyOf(
     )
 
     return Typography(
-        xxs = textStyle.copy(fontSize = 12.sp),
-        xs = textStyle.copy(fontSize = 14.sp),
-        s = textStyle.copy(fontSize = 16.sp),
-        m = textStyle.copy(fontSize = 18.sp),
-        l = textStyle.copy(fontSize = 20.sp),
-        xxl = textStyle.copy(fontSize = 32.sp),
+        style = textStyle,
         fontFamily = fontFamily
     )
 }

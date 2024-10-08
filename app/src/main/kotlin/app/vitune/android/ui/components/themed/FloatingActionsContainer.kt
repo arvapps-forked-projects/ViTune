@@ -35,12 +35,17 @@ fun BoxScope.FloatingActionsContainerWithScrollToTop(
     modifier: Modifier = Modifier,
     visible: Boolean = true,
     @DrawableRes icon: Int? = null,
+    @DrawableRes scrollIcon: Int? = R.drawable.chevron_up,
     onClick: (() -> Unit)? = null,
+    onScrollToTop: (suspend () -> Unit)? = lazyGridState::smoothScrollToTop,
+    reverse: Boolean = false,
     insets: WindowInsets = LocalPlayerAwareWindowInsets.current
 ) = FloatingActions(
     state = if (visible) lazyGridState.scrollingInfo() else null,
-    onScrollToTop = lazyGridState::smoothScrollToTop,
+    onScrollToTop = onScrollToTop,
+    reverse = reverse,
     icon = icon,
+    scrollIcon = scrollIcon,
     onClick = onClick,
     insets = insets,
     modifier = modifier
@@ -52,12 +57,17 @@ fun BoxScope.FloatingActionsContainerWithScrollToTop(
     modifier: Modifier = Modifier,
     visible: Boolean = true,
     @DrawableRes icon: Int? = null,
+    @DrawableRes scrollIcon: Int? = R.drawable.chevron_up,
     onClick: (() -> Unit)? = null,
+    onScrollToTop: (suspend () -> Unit)? = lazyListState::smoothScrollToTop,
+    reverse: Boolean = false,
     insets: WindowInsets = LocalPlayerAwareWindowInsets.current
 ) = FloatingActions(
     state = if (visible) lazyListState.scrollingInfo() else null,
-    onScrollToTop = lazyListState::smoothScrollToTop,
+    onScrollToTop = onScrollToTop,
+    reverse = reverse,
     icon = icon,
+    scrollIcon = scrollIcon,
     onClick = onClick,
     insets = insets,
     modifier = modifier
@@ -69,11 +79,17 @@ fun BoxScope.FloatingActionsContainerWithScrollToTop(
     modifier: Modifier = Modifier,
     visible: Boolean = true,
     @DrawableRes icon: Int? = null,
+    @DrawableRes scrollIcon: Int? = R.drawable.chevron_up,
     onClick: (() -> Unit)? = null,
+    onScrollToTop: (suspend () -> Unit)? = scrollState::smoothScrollToTop,
+    reverse: Boolean = false,
     insets: WindowInsets = LocalPlayerAwareWindowInsets.current
 ) = FloatingActions(
     state = if (visible) scrollState.scrollingInfo() else null,
+    onScrollToTop = onScrollToTop,
+    reverse = reverse,
     icon = icon,
+    scrollIcon = scrollIcon,
     onClick = onClick,
     insets = insets,
     modifier = modifier
@@ -85,7 +101,9 @@ private fun BoxScope.FloatingActions(
     insets: WindowInsets,
     modifier: Modifier = Modifier,
     onScrollToTop: (suspend () -> Unit)? = null,
+    reverse: Boolean = false,
     @DrawableRes icon: Int? = null,
+    @DrawableRes scrollIcon: Int? = R.drawable.chevron_up,
     onClick: (() -> Unit)? = null
 ) = Row(
     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -105,7 +123,7 @@ private fun BoxScope.FloatingActions(
 
     onScrollToTop?.let {
         transition.AnimatedVisibility(
-            visible = { it?.isScrollingDown == false && it.isFar },
+            visible = { it != null && it.isScrollingDown == reverse && it.isFar },
             enter = slideInVertically(tween(500, if (icon == null) 0 else 100)) { it },
             exit = slideOutVertically(tween(500, 0)) { it }
         ) {
@@ -113,8 +131,7 @@ private fun BoxScope.FloatingActions(
                 onClick = {
                     coroutineScope.launch { onScrollToTop() }
                 },
-                enabled = transition.targetState?.isScrollingDown == false && transition.targetState?.isFar == true,
-                iconId = R.drawable.chevron_up,
+                iconId = scrollIcon ?: R.drawable.chevron_up,
                 modifier = Modifier
                     .padding(bottom = 16.dp)
                     .padding(bottomPaddingValues)

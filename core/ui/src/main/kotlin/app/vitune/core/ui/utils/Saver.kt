@@ -1,7 +1,11 @@
 package app.vitune.core.ui.utils
 
+import android.os.Parcelable
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 fun <Type : Any> stateFlowSaver() = stateFlowSaverOf<Type, Type>(
@@ -16,3 +20,8 @@ inline fun <Type, Saveable : Any> stateFlowSaverOf(
     override fun restore(value: Saveable) = MutableStateFlow(from(value))
     override fun SaverScope.save(value: MutableStateFlow<Type>) = to(value.value)
 }
+
+inline fun <reified T : Parcelable> stateListSaver() = listSaver<SnapshotStateList<T>, T>(
+    save = { it.toList() },
+    restore = { it.toMutableStateList() }
+)
