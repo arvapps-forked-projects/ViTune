@@ -12,7 +12,7 @@ import io.ktor.client.request.parameter
 
 suspend fun SponsorBlock.segments(
     videoId: String,
-    categories: List<Category>? = listOf(Category.Sponsor),
+    categories: List<Category>? = listOf(Category.Sponsor, Category.OfftopicMusic),
     actions: List<Action>? = listOf(Action.Skip),
     segments: List<SerializableUUID>? = null
 ) = runCatchingCancellable {

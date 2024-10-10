@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -145,12 +146,6 @@ fun HomeSongs(
         songProvider().collect { items = it.toPersistentList() }
     }
 
-    val sortOrderIconRotation by animateFloatAsState(
-        targetValue = if (sortOrder == SortOrder.Ascending) 0f else 180f,
-        animationSpec = tween(durationMillis = 400, easing = LinearEasing),
-        label = ""
-    )
-
     val lazyListState = rememberLazyListState()
 
     Box(
@@ -228,30 +223,7 @@ fun HomeSongs(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    HeaderIconButton(
-                        icon = R.drawable.trending,
-                        enabled = sortBy == SongSortBy.PlayTime,
-                        onClick = { setSortBy(SongSortBy.PlayTime) }
-                    )
-
-                    HeaderIconButton(
-                        icon = R.drawable.text,
-                        enabled = sortBy == SongSortBy.Title,
-                        onClick = { setSortBy(SongSortBy.Title) }
-                    )
-
-                    HeaderIconButton(
-                        icon = R.drawable.time,
-                        enabled = sortBy == SongSortBy.DateAdded,
-                        onClick = { setSortBy(SongSortBy.DateAdded) }
-                    )
-
-                    HeaderIconButton(
-                        icon = R.drawable.arrow_up,
-                        color = colorPalette.text,
-                        onClick = { setSortOrder(!sortOrder) },
-                        modifier = Modifier.graphicsLayer { rotationZ = sortOrderIconRotation }
-                    )
+                    HeaderSongSortBy(sortBy, setSortBy, sortOrder, setSortOrder)
                 }
             }
 
@@ -365,5 +337,47 @@ fun HideSongDialog(
             }
         },
         modifier = modifier
+    )
+}
+
+@Suppress("UnusedReceiverParameter")
+@Composable
+fun RowScope.HeaderSongSortBy(
+    sortBy: SongSortBy,
+    setSortBy: (SongSortBy) -> Unit,
+    sortOrder: SortOrder,
+    setSortOrder: (SortOrder) -> Unit
+) {
+    val (colorPalette) = LocalAppearance.current
+
+    val sortOrderIconRotation by animateFloatAsState(
+        targetValue = if (sortOrder == SortOrder.Ascending) 0f else 180f,
+        animationSpec = tween(durationMillis = 400, easing = LinearEasing),
+        label = ""
+    )
+
+    HeaderIconButton(
+        icon = R.drawable.trending,
+        enabled = sortBy == SongSortBy.PlayTime,
+        onClick = { setSortBy(SongSortBy.PlayTime) }
+    )
+
+    HeaderIconButton(
+        icon = R.drawable.text,
+        enabled = sortBy == SongSortBy.Title,
+        onClick = { setSortBy(SongSortBy.Title) }
+    )
+
+    HeaderIconButton(
+        icon = R.drawable.time,
+        enabled = sortBy == SongSortBy.DateAdded,
+        onClick = { setSortBy(SongSortBy.DateAdded) }
+    )
+
+    HeaderIconButton(
+        icon = R.drawable.arrow_up,
+        color = colorPalette.text,
+        onClick = { setSortOrder(!sortOrder) },
+        modifier = Modifier.graphicsLayer { rotationZ = sortOrderIconRotation }
     )
 }

@@ -55,6 +55,9 @@ object PlayerPreferences : GlobalPreferencesHolder() {
 
     var pauseCache by boolean(false)
 
+    val sponsorBlockEnabledProperty = boolean(false)
+    var sponsorBlockEnabled by sponsorBlockEnabledProperty
+
     enum class PlayerLayout(val displayName: @Composable () -> String) {
         Classic(displayName = { stringResource(R.string.classic_player_layout_name) }),
         New(displayName = { stringResource(R.string.new_player_layout_name) })

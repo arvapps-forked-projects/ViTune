@@ -325,6 +325,8 @@
     <string name="bass_boost_description">Boost low frequencies to improve listening experience</string>
     <string name="bass_boost_level">Bass boost level</string>
     <string name="bass_boost_level_description">Level (0–1000) of boosting low frequencies; use at own risk!</string>
+    <string name="sponsor_block">Sponsorblock</string>
+    <string name="sponsor_block_description">Blocks sponsored/offtopic content using data from the Sponsorblock API</string>
     <string name="reverb">Reverb</string>
     <string name="audio_focus">Audio focus</string>
     <string name="audio_focus_description">Whether the player should request system-wide audio (media) focus</string>

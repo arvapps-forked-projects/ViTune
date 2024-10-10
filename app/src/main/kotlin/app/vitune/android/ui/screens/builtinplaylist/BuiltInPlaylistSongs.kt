@@ -36,6 +36,7 @@ import app.vitune.android.ui.components.themed.NonQueuedMediaItemMenu
 import app.vitune.android.ui.components.themed.SecondaryTextButton
 import app.vitune.android.ui.components.themed.ValueSelectorDialog
 import app.vitune.android.ui.items.SongItem
+import app.vitune.android.ui.screens.home.HeaderSongSortBy
 import app.vitune.android.utils.PlaylistDownloadIcon
 import app.vitune.android.utils.asMediaItem
 import app.vitune.android.utils.enqueue
@@ -43,8 +44,11 @@ import app.vitune.android.utils.forcePlayAtIndex
 import app.vitune.android.utils.forcePlayFromBeginning
 import app.vitune.compose.persist.persistList
 import app.vitune.core.data.enums.BuiltInPlaylist
+import app.vitune.core.data.enums.SongSortBy
+import app.vitune.core.data.enums.SortOrder
 import app.vitune.core.ui.Dimensions
 import app.vitune.core.ui.LocalAppearance
+import app.vitune.core.ui.utils.enumSaver
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.cancellable
@@ -65,13 +69,22 @@ fun BuiltInPlaylistSongs(
 
     var songs by persistList<Song>("${builtInPlaylist.name}/songs")
 
-    LaunchedEffect(binder) {
+    var sortBy by rememberSaveable(stateSaver = enumSaver()) { mutableStateOf(SongSortBy.DateAdded) }
+    var sortOrder by rememberSaveable(stateSaver = enumSaver()) { mutableStateOf(SortOrder.Descending) }
+
+    LaunchedEffect(binder, sortBy, sortOrder) {
         when (builtInPlaylist) {
-            BuiltInPlaylist.Favorites -> Database.favorites()
+            BuiltInPlaylist.Favorites -> Database.favorites(
+                sortBy = sortBy,
+                sortOrder = sortOrder
+            )
 
             BuiltInPlaylist.Offline ->
                 Database
-                    .songsWithContentLength()
+                    .songsWithContentLength(
+                        sortBy = sortBy,
+                        sortOrder = sortOrder
+                    )
                     .map { songs ->
                         songs.filter { binder?.isCached(it) ?: false }.map { it.song }
                     }
@@ -136,11 +149,16 @@ fun BuiltInPlaylistSongs(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    if (builtInPlaylist != BuiltInPlaylist.Offline) {
-                        PlaylistDownloadIcon(
-                            songs = songs.map(Song::asMediaItem).toImmutableList()
-                        )
-                    }
+                    if (builtInPlaylist != BuiltInPlaylist.Offline) PlaylistDownloadIcon(
+                        songs = songs.map(Song::asMediaItem).toImmutableList()
+                    )
+
+                    if (builtInPlaylist.sortable) HeaderSongSortBy(
+                        sortBy = sortBy,
+                        setSortBy = { sortBy = it },
+                        sortOrder = sortOrder,
+                        setSortOrder = { sortOrder = it }
+                    )
 
                     if (builtInPlaylist == BuiltInPlaylist.Top) {
                         var dialogShowing by rememberSaveable { mutableStateOf(false) }

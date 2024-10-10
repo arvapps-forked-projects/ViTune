@@ -158,9 +158,48 @@ interface Database {
     }
 
     @Transaction
+    @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY totalPlayTimeMs ASC")
+    fun favoritesByPlayTimeAsc(): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY totalPlayTimeMs DESC")
+    fun favoritesByPlayTimeDesc(): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY likedAt ASC")
+    fun favoritesByLikedAtAsc(): Flow<List<Song>>
+
+    @Transaction
     @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY likedAt DESC")
-    @RewriteQueriesToDropUnusedColumns
-    fun favorites(): Flow<List<Song>>
+    fun favoritesByLikedAtDesc(): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY title ASC")
+    fun favoritesByTitleAsc(): Flow<List<Song>>
+
+    @Transaction
+    @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY title DESC")
+    fun favoritesByTitleDesc(): Flow<List<Song>>
+
+    fun favorites(
+        sortBy: SongSortBy = SongSortBy.DateAdded,
+        sortOrder: SortOrder = SortOrder.Descending
+    ) = when (sortBy) {
+        SongSortBy.PlayTime -> when (sortOrder) {
+            SortOrder.Ascending -> favoritesByPlayTimeAsc()
+            SortOrder.Descending -> favoritesByPlayTimeDesc()
+        }
+
+        SongSortBy.Title -> when (sortOrder) {
+            SortOrder.Ascending -> favoritesByTitleAsc()
+            SortOrder.Descending -> favoritesByTitleDesc()
+        }
+
+        SongSortBy.DateAdded -> when (sortOrder) {
+            SortOrder.Ascending -> favoritesByLikedAtAsc()
+            SortOrder.Descending -> favoritesByLikedAtDesc()
+        }
+    }
 
     @Query("SELECT * FROM QueuedMediaItem")
     fun queue(): List<QueuedMediaItem>
@@ -421,10 +460,85 @@ interface Database {
         SELECT Song.*, contentLength FROM Song
         JOIN Format ON id = songId
         WHERE contentLength IS NOT NULL
+        ORDER BY Song.totalPlayTimeMs ASC
+        """
+    )
+    fun songsWithContentLengthByPlayTimeAsc(): Flow<List<SongWithContentLength>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT Song.*, contentLength FROM Song
+        JOIN Format ON id = songId
+        WHERE contentLength IS NOT NULL
+        ORDER BY Song.totalPlayTimeMs DESC
+        """
+    )
+    fun songsWithContentLengthByPlayTimeDesc(): Flow<List<SongWithContentLength>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT Song.*, contentLength FROM Song
+        JOIN Format ON id = songId
+        WHERE contentLength IS NOT NULL
+        ORDER BY Song.ROWID ASC
+        """
+    )
+    fun songsWithContentLengthByRowIdAsc(): Flow<List<SongWithContentLength>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT Song.*, contentLength FROM Song
+        JOIN Format ON id = songId
+        WHERE contentLength IS NOT NULL
         ORDER BY Song.ROWID DESC
         """
     )
-    fun songsWithContentLength(): Flow<List<SongWithContentLength>>
+    fun songsWithContentLengthByRowIdDesc(): Flow<List<SongWithContentLength>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT Song.*, contentLength FROM Song
+        JOIN Format ON id = songId
+        WHERE contentLength IS NOT NULL
+        ORDER BY Song.title ASC
+        """
+    )
+    fun songsWithContentLengthByTitleAsc(): Flow<List<SongWithContentLength>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT Song.*, contentLength FROM Song
+        JOIN Format ON id = songId
+        WHERE contentLength IS NOT NULL
+        ORDER BY Song.title DESC
+        """
+    )
+    fun songsWithContentLengthByTitleDesc(): Flow<List<SongWithContentLength>>
+
+    fun songsWithContentLength(
+        sortBy: SongSortBy = SongSortBy.DateAdded,
+        sortOrder: SortOrder = SortOrder.Descending
+    ) = when (sortBy) {
+        SongSortBy.PlayTime -> when (sortOrder) {
+            SortOrder.Ascending -> songsWithContentLengthByPlayTimeAsc()
+            SortOrder.Descending -> songsWithContentLengthByPlayTimeDesc()
+        }
+
+        SongSortBy.Title -> when (sortOrder) {
+            SortOrder.Ascending -> songsWithContentLengthByTitleAsc()
+            SortOrder.Descending -> songsWithContentLengthByTitleDesc()
+        }
+
+        SongSortBy.DateAdded -> when (sortOrder) {
+            SortOrder.Ascending -> songsWithContentLengthByRowIdAsc()
+            SortOrder.Descending -> songsWithContentLengthByRowIdDesc()
+        }
+    }
 
     @Query("SELECT id FROM Song WHERE blacklisted")
     suspend fun blacklistedIds(): List<String>

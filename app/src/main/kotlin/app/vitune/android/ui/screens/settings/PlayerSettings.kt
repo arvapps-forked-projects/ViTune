@@ -148,6 +148,15 @@ fun PlayerSettings() = with(PlayerPreferences) {
                 )
             }
 
+            SwitchSettingsEntry(
+                title = stringResource(R.string.sponsor_block),
+                text = stringResource(R.string.sponsor_block_description),
+                isChecked = sponsorBlockEnabled,
+                onCheckedChange = {
+                    sponsorBlockEnabled = it
+                }
+            )
+
             EnumValueSelectorSettingsEntry(
                 title = stringResource(R.string.reverb),
                 selectedValue = reverb,

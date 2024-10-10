@@ -25,3 +25,8 @@ inline fun <reified T : Parcelable> stateListSaver() = listSaver<SnapshotStateLi
     save = { it.toList() },
     restore = { it.toMutableStateList() }
 )
+
+inline fun <reified E : Enum<E>> enumSaver() = object : Saver<E, String> {
+    override fun restore(value: String) = enumValues<E>().first { it.name == value }
+    override fun SaverScope.save(value: E) = value.name
+}
