@@ -216,7 +216,7 @@ fun BuiltInPlaylistSongs(
                                 )
                             }
                         )
-                        .animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        .animateItem(),
                     song = song,
                     index = if (builtInPlaylist == BuiltInPlaylist.Top) index else null,
                     thumbnailSize = Dimensions.thumbnails.song

@@ -262,7 +262,7 @@ fun HomeSongs(
                                 )
                             }
                         )
-                        .animateItem(fadeInSpec = null, fadeOutSpec = null)
+                        .animateItem()
                         .let {
                             if (AppearancePreferences.swipeToHideSong) it.swipeToClose(
                                 key = filteredItems,
