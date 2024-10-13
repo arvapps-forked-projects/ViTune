@@ -2,14 +2,18 @@
 
 package app.vitune.compose.routing
 
+import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.saveable.SaverScope
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Immutable
-open class Route internal constructor(val tag: String) {
+sealed class Route : Parcelable {
+    abstract val tag: String
+
     override fun equals(other: Any?) = when {
         this === other -> true
         other is Route -> tag == other.tag
@@ -34,15 +38,10 @@ open class Route internal constructor(val tag: String) {
             )
         )
     }
-
-    object Saver : androidx.compose.runtime.saveable.Saver<Route?, String> {
-        override fun restore(value: String): Route? = value.takeIf(String::isNotEmpty)?.let(::Route)
-        override fun SaverScope.save(value: Route?): String = value?.tag.orEmpty()
-    }
 }
 
 @Immutable
-class Route0(tag: String) : Route(tag) {
+class Route0(override val tag: String) : Route() {
     context(RouteHandlerScope)
     @Composable
     operator fun invoke(content: @Composable () -> Unit) {
@@ -54,7 +53,7 @@ class Route0(tag: String) : Route(tag) {
 }
 
 @Immutable
-class Route1<P0>(tag: String) : Route(tag) {
+class Route1<P0>(override val tag: String) : Route() {
     context(RouteHandlerScope)
     @Composable
     operator fun invoke(content: @Composable (P0) -> Unit) {
@@ -66,7 +65,7 @@ class Route1<P0>(tag: String) : Route(tag) {
 }
 
 @Immutable
-class Route2<P0, P1>(tag: String) : Route(tag) {
+class Route2<P0, P1>(override val tag: String) : Route() {
     context(RouteHandlerScope)
     @Composable
     operator fun invoke(content: @Composable (P0, P1) -> Unit) {
@@ -81,7 +80,7 @@ class Route2<P0, P1>(tag: String) : Route(tag) {
 }
 
 @Immutable
-class Route3<P0, P1, P2>(tag: String) : Route(tag) {
+class Route3<P0, P1, P2>(override val tag: String) : Route() {
     context(RouteHandlerScope)
     @Composable
     operator fun invoke(content: @Composable (P0, P1, P2) -> Unit) {
@@ -97,7 +96,7 @@ class Route3<P0, P1, P2>(tag: String) : Route(tag) {
 }
 
 @Immutable
-class Route4<P0, P1, P2, P3>(tag: String) : Route(tag) {
+class Route4<P0, P1, P2, P3>(override val tag: String) : Route() {
     context(RouteHandlerScope)
     @Composable
     operator fun invoke(content: @Composable (P0, P1, P2, P3) -> Unit) {

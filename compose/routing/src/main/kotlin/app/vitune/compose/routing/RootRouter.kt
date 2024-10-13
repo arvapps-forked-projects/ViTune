@@ -36,9 +36,7 @@ fun RouteHandler(
     transitionSpec: TransitionSpec<Route?> = defaultTransitionSpec,
     content: @Composable RouteHandlerScope.() -> Unit
 ) {
-    var child by rememberSaveable(stateSaver = Route.Saver) {
-        mutableStateOf(null)
-    }
+    var child: Route? by rememberSaveable { mutableStateOf(null) }
 
     RouteHandler(
         child = child,
