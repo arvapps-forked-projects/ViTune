@@ -30,7 +30,7 @@
     <string name="offline">Offline</string>
     <string name="history">Ajalugu</string>
     <string name="overview">Ülevaade</string>
-    <string name="library">Raamatukogu</string>
+    <string name="library">Muusikakogu</string>
     <string name="discover">Avasta</string>
     <string name="local">Kohalik</string>
     <string name="quick_picks">Kiirvalikud</string>
@@ -70,7 +70,7 @@
     <string name="rename">Nimeta ümber</string>
     <string name="delete">Kustuta</string>
     <string name="reset">Lähtesta</string>
-    <string name="clear">Puhasta</string>
+    <string name="clear">Tühjenda</string>
     <string name="view_all">Vaata kõiki</string>
 
     <string name="on_label">sees</string>
