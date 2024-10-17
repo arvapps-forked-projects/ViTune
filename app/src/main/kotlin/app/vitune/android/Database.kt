@@ -77,12 +77,12 @@ interface Database {
     fun songsByRowIdDesc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title ASC")
+    @Query("SELECT * FROM Song WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title COLLATE NOCASE ASC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByTitleAsc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title DESC")
+    @Query("SELECT * FROM Song WHERE id NOT LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title COLLATE NOCASE DESC")
     @RewriteQueriesToDropUnusedColumns
     fun songsByTitleDesc(): Flow<List<Song>>
 
@@ -120,12 +120,12 @@ interface Database {
     fun localSongsByRowIdDesc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title ASC")
+    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title COLLATE NOCASE ASC")
     @RewriteQueriesToDropUnusedColumns
     fun localSongsByTitleAsc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title DESC")
+    @Query("SELECT * FROM Song WHERE id LIKE '$LOCAL_KEY_PREFIX%' ORDER BY title COLLATE NOCASE DESC")
     @RewriteQueriesToDropUnusedColumns
     fun localSongsByTitleDesc(): Flow<List<Song>>
 
@@ -174,11 +174,11 @@ interface Database {
     fun favoritesByLikedAtDesc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY title ASC")
+    @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY title COLLATE NOCASE ASC")
     fun favoritesByTitleAsc(): Flow<List<Song>>
 
     @Transaction
-    @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY title DESC")
+    @Query("SELECT * FROM Song WHERE likedAt IS NOT NULL ORDER BY title COLLATE NOCASE DESC")
     fun favoritesByTitleDesc(): Flow<List<Song>>
 
     fun favorites(
@@ -251,10 +251,10 @@ interface Database {
     @Query("SELECT * FROM Artist WHERE id = :id")
     fun artist(id: String): Flow<Artist?>
 
-    @Query("SELECT * FROM Artist WHERE bookmarkedAt IS NOT NULL ORDER BY name DESC")
+    @Query("SELECT * FROM Artist WHERE bookmarkedAt IS NOT NULL ORDER BY name COLLATE NOCASE DESC")
     fun artistsByNameDesc(): Flow<List<Artist>>
 
-    @Query("SELECT * FROM Artist WHERE bookmarkedAt IS NOT NULL ORDER BY name ASC")
+    @Query("SELECT * FROM Artist WHERE bookmarkedAt IS NOT NULL ORDER BY name COLLATE NOCASE ASC")
     fun artistsByNameAsc(): Flow<List<Artist>>
 
     @Query("SELECT * FROM Artist WHERE bookmarkedAt IS NOT NULL ORDER BY bookmarkedAt DESC")
@@ -291,20 +291,20 @@ interface Database {
     @RewriteQueriesToDropUnusedColumns
     fun albumSongs(albumId: String): Flow<List<Song>>
 
-    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY title ASC")
+    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY title COLLATE NOCASE ASC")
     fun albumsByTitleAsc(): Flow<List<Album>>
 
     // authorsText as fallback for when YouTube showed the year in the artist field
-    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY year ASC, authorsText ASC")
+    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY year ASC, authorsText COLLATE NOCASE ASC")
     fun albumsByYearAsc(): Flow<List<Album>>
 
     @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY bookmarkedAt ASC")
     fun albumsByRowIdAsc(): Flow<List<Album>>
 
-    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY title DESC")
+    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY title COLLATE NOCASE DESC")
     fun albumsByTitleDesc(): Flow<List<Album>>
 
-    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY year DESC, authorsText DESC")
+    @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY year DESC, authorsText COLLATE NOCASE DESC")
     fun albumsByYearDesc(): Flow<List<Album>>
 
     @Query("SELECT * FROM Album WHERE bookmarkedAt IS NOT NULL ORDER BY bookmarkedAt DESC")
@@ -357,7 +357,7 @@ interface Database {
     @Query(
         """
         SELECT id, name, (SELECT COUNT(*) FROM SongPlaylistMap WHERE playlistId = id) as songCount, thumbnail FROM Playlist 
-        ORDER BY name ASC
+        ORDER BY name COLLATE NOCASE ASC
         """
     )
     fun playlistPreviewsByNameAsc(): Flow<List<PlaylistPreview>>
@@ -384,7 +384,7 @@ interface Database {
     @Query(
         """
         SELECT id, name, (SELECT COUNT(*) FROM SongPlaylistMap WHERE playlistId = id) as songCount, thumbnail FROM Playlist
-        ORDER BY name DESC
+        ORDER BY name COLLATE NOCASE DESC
         """
     )
     fun playlistPreviewsByNameDesc(): Flow<List<PlaylistPreview>>
@@ -504,7 +504,7 @@ interface Database {
         SELECT Song.*, contentLength FROM Song
         JOIN Format ON id = songId
         WHERE contentLength IS NOT NULL
-        ORDER BY Song.title ASC
+        ORDER BY Song.title COLLATE NOCASE ASC
         """
     )
     fun songsWithContentLengthByTitleAsc(): Flow<List<SongWithContentLength>>
@@ -515,7 +515,7 @@ interface Database {
         SELECT Song.*, contentLength FROM Song
         JOIN Format ON id = songId
         WHERE contentLength IS NOT NULL
-        ORDER BY Song.title DESC
+        ORDER BY Song.title COLLATE NOCASE DESC
         """
     )
     fun songsWithContentLengthByTitleDesc(): Flow<List<SongWithContentLength>>
