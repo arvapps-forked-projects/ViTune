@@ -2,7 +2,6 @@ package app.vitune.android.ui.screens.mood
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.ui.res.stringResource
 import app.vitune.android.R
 import app.vitune.android.models.Mood
 import app.vitune.android.ui.components.themed.Scaffold
@@ -23,12 +22,13 @@ fun MoodScreen(mood: Mood) {
 
         Content {
             Scaffold(
+                key = "mood",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = 0,
                 onTabChange = { },
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.mood), R.drawable.disc)
+                tabColumnContent = {
+                    tab(0, R.string.mood, R.drawable.disc)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {

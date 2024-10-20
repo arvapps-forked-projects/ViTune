@@ -5,7 +5,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.ui.res.stringResource
 import app.vitune.android.R
 import app.vitune.android.ui.components.themed.Scaffold
 import app.vitune.android.ui.screens.GlobalRoutes
@@ -33,12 +32,13 @@ fun PipedPlaylistScreen(
 
         Content {
             Scaffold(
+                key = "pipedplaylist",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = 0,
                 onTabChange = { },
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.songs), R.drawable.musical_notes)
+                tabColumnContent = {
+                    tab(0, R.string.songs, R.drawable.musical_notes)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {

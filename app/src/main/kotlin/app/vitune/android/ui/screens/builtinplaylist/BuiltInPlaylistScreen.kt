@@ -26,20 +26,19 @@ fun BuiltInPlaylistScreen(builtInPlaylist: BuiltInPlaylist) {
         GlobalRoutes()
 
         Content {
+            val topTabTitle = stringResource(R.string.format_top_playlist, DataPreferences.topListLength)
+
             Scaffold(
+                key = "builtinplaylist",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = tabIndex,
                 onTabChange = onTabIndexChanged,
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.favorites), R.drawable.heart)
-                    item(1, stringResource(R.string.offline), R.drawable.airplane)
-                    item(
-                        2,
-                        stringResource(R.string.format_top_playlist, DataPreferences.topListLength),
-                        R.drawable.trending_up
-                    )
-                    item(3, stringResource(R.string.history), R.drawable.history)
+                tabColumnContent = {
+                    tab(0, R.string.favorites, R.drawable.heart)
+                    tab(1, R.string.offline, R.drawable.airplane)
+                    tab(2, topTabTitle, R.drawable.trending_up)
+                    tab(3, R.string.history, R.drawable.history)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {

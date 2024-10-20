@@ -74,13 +74,14 @@ fun SearchScreen(
             }
 
             Scaffold(
+                key = "search",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = tabIndex,
                 onTabChange = onTabChanged,
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.online), R.drawable.globe)
-                    item(1, stringResource(R.string.library), R.drawable.library)
+                tabColumnContent = {
+                    tab(0, R.string.online, R.drawable.globe, canHide = false)
+                    tab(1, R.string.library, R.drawable.library)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(currentTabIndex) {

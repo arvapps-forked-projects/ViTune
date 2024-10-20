@@ -187,13 +187,14 @@ fun AlbumScreen(browseId: String) {
             )
 
             Scaffold(
+                key = "album",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = tabIndex,
                 onTabChange = { newTab -> tabIndexState.update { newTab } },
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.songs), R.drawable.musical_notes)
-                    item(1, stringResource(R.string.other_versions), R.drawable.disc)
+                tabColumnContent = {
+                    tab(0, R.string.songs, R.drawable.musical_notes, canHide = false)
+                    tab(1, R.string.other_versions, R.drawable.disc)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {

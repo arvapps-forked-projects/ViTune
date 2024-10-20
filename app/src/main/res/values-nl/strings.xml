@@ -413,6 +413,8 @@
     <string name="reverb_large_hall">Large hall</string>
     <string name="reverb_plate">Plate</string>
 
+    <string name="tabs">Tabbladen</string>
+
     <plurals name="format_reset_blacklist_description">
         <item quantity="one">Haal %1$s nummer van de zwarte lijst</item>
         <item quantity="other">Haal %1$s nummers van de zwarte lijst</item>

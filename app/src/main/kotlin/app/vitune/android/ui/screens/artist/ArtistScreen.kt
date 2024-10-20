@@ -160,16 +160,17 @@ fun ArtistScreen(browseId: String) {
                 }
 
             Scaffold(
+                key = "artist",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = UIStatePreferences.artistScreenTabIndex,
                 onTabChange = { UIStatePreferences.artistScreenTabIndex = it },
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.overview), R.drawable.sparkles)
-                    item(1, stringResource(R.string.songs), R.drawable.musical_notes)
-                    item(2, stringResource(R.string.albums), R.drawable.disc)
-                    item(3, stringResource(R.string.singles), R.drawable.disc)
-                    item(4, stringResource(R.string.library), R.drawable.library)
+                tabColumnContent = {
+                    tab(0, R.string.overview, R.drawable.sparkles)
+                    tab(1, R.string.songs, R.drawable.musical_notes)
+                    tab(2, R.string.albums, R.drawable.disc)
+                    tab(3, R.string.singles, R.drawable.disc)
+                    tab(4, R.string.library, R.drawable.library)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {

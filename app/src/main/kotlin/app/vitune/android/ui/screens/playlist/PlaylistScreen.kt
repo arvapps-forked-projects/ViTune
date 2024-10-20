@@ -2,7 +2,6 @@ package app.vitune.android.ui.screens.playlist
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.ui.res.stringResource
 import app.vitune.android.R
 import app.vitune.android.ui.components.themed.Scaffold
 import app.vitune.android.ui.screens.GlobalRoutes
@@ -26,12 +25,13 @@ fun PlaylistScreen(
 
         Content {
             Scaffold(
+                key = "playlist",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = 0,
                 onTabChange = { },
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.songs), R.drawable.musical_notes)
+                tabColumnContent = {
+                    tab(0, R.string.songs, R.drawable.musical_notes)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {

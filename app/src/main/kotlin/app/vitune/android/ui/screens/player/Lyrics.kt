@@ -5,6 +5,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -79,7 +80,6 @@ import app.vitune.android.utils.SynchronizedLyrics
 import app.vitune.android.utils.SynchronizedLyricsState
 import app.vitune.android.utils.center
 import app.vitune.android.utils.color
-import app.vitune.android.utils.disabled
 import app.vitune.android.utils.isInPip
 import app.vitune.android.utils.medium
 import app.vitune.android.utils.semiBold
@@ -88,6 +88,7 @@ import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.onOverlay
 import app.vitune.core.ui.onOverlayShimmer
 import app.vitune.core.ui.overlay
+import app.vitune.core.ui.utils.dp
 import app.vitune.providers.innertube.Innertube
 import app.vitune.providers.innertube.models.bodies.NextBody
 import app.vitune.providers.innertube.requests.lyrics
@@ -388,7 +389,8 @@ fun Lyrics(
             lyricsState.sentences?.let {
                 SynchronizedLyrics(it.toImmutableMap()) {
                     binder?.player?.let { player ->
-                        player.currentPosition + UPDATE_DELAY + lyricsState.offset - (lyrics?.startTime ?: 0L)
+                        player.currentPosition + UPDATE_DELAY + lyricsState.offset - (lyrics?.startTime
+                            ?: 0L)
                     } ?: 0L
                 }
             }
@@ -436,12 +438,21 @@ fun Lyrics(
                     itemsIndexed(
                         items = synchronizedLyrics.sentences.values.toImmutableList()
                     ) { index, sentence ->
-                        BasicText(
+                        val color by animateColorAsState(
+                            if (index == synchronizedLyrics.index) colorPalette.text
+                            else colorPalette.textDisabled
+                        )
+
+                        if (sentence.isBlank()) Image(
+                            painter = painterResource(R.drawable.musical_notes),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(color),
+                            modifier = Modifier
+                                .padding(vertical = 4.dp, horizontal = 32.dp)
+                                .size(typography.xs.fontSize.dp)
+                        ) else BasicText(
                             text = sentence,
-                            style = typography.xs.center.medium.let {
-                                if (index == synchronizedLyrics.index) it.color(Color.White)
-                                else it.disabled
-                            },
+                            style = typography.xs.center.medium.color(color),
                             modifier = Modifier.padding(vertical = 4.dp, horizontal = 32.dp)
                         )
                     }

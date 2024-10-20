@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
 import app.vitune.android.Database
 import app.vitune.android.R
 import app.vitune.android.models.Playlist
@@ -63,12 +62,13 @@ fun LocalPlaylistScreen(playlistId: Long) {
             }
 
             Scaffold(
+                key = "localplaylist",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = 0,
                 onTabChange = { },
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.songs), R.drawable.musical_notes)
+                tabColumnContent = {
+                    tab(0, R.string.songs, R.drawable.musical_notes)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(currentTabIndex) {

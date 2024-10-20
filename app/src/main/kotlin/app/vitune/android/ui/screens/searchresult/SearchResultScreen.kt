@@ -73,16 +73,17 @@ fun SearchResultScreen(query: String, onSearchAgain: () -> Unit) {
             }
 
             Scaffold(
+                key = "searchresult",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = UIStatePreferences.searchResultScreenTabIndex,
                 onTabChange = { UIStatePreferences.searchResultScreenTabIndex = it },
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.songs), R.drawable.musical_notes)
-                    item(1, stringResource(R.string.albums), R.drawable.disc)
-                    item(2, stringResource(R.string.artists), R.drawable.person)
-                    item(3, stringResource(R.string.videos), R.drawable.film)
-                    item(4, stringResource(R.string.playlists), R.drawable.playlist)
+                tabColumnContent = {
+                    tab(0, R.string.songs, R.drawable.musical_notes)
+                    tab(1, R.string.albums, R.drawable.disc)
+                    tab(2, R.string.artists, R.drawable.person)
+                    tab(3, R.string.videos, R.drawable.film)
+                    tab(4, R.string.playlists, R.drawable.playlist)
                 }
             ) { tabIndex ->
                 saveableStateHolder.SaveableStateProvider(tabIndex) {

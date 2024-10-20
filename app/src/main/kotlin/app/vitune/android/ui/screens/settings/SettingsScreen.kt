@@ -31,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
@@ -68,18 +67,19 @@ fun SettingsScreen() {
 
         Content {
             Scaffold(
+                key = "settings",
                 topIconButtonId = R.drawable.chevron_back,
                 onTopIconButtonClick = pop,
                 tabIndex = tabIndex,
                 onTabChange = onTabChanged,
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.appearance), R.drawable.color_palette)
-                    item(1, stringResource(R.string.player), R.drawable.play)
-                    item(2, stringResource(R.string.cache), R.drawable.server)
-                    item(3, stringResource(R.string.database), R.drawable.server)
-                    item(4, stringResource(R.string.sync), R.drawable.sync)
-                    item(5, stringResource(R.string.other), R.drawable.shapes)
-                    item(6, stringResource(R.string.about), R.drawable.information)
+                tabColumnContent = {
+                    tab(0, R.string.appearance, R.drawable.color_palette, canHide = false)
+                    tab(1, R.string.player, R.drawable.play, canHide = false)
+                    tab(2, R.string.cache, R.drawable.server, canHide = false)
+                    tab(3, R.string.database, R.drawable.server, canHide = false)
+                    tab(4, R.string.sync, R.drawable.sync, canHide = false)
+                    tab(5, R.string.other, R.drawable.shapes, canHide = false)
+                    tab(6, R.string.about, R.drawable.information, canHide = false)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(currentTabIndex) {

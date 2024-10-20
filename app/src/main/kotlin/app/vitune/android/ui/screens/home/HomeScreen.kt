@@ -2,15 +2,9 @@ package app.vitune.android.ui.screens.home
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.ui.res.stringResource
-import app.vitune.android.Database
 import app.vitune.android.R
-import app.vitune.android.handleUrl
-import app.vitune.android.models.SearchQuery
 import app.vitune.android.models.toUiMood
-import app.vitune.android.preferences.DataPreferences
 import app.vitune.android.preferences.UIStatePreferences
-import app.vitune.android.query
 import app.vitune.android.ui.components.themed.Scaffold
 import app.vitune.android.ui.screens.GlobalRoutes
 import app.vitune.android.ui.screens.Route
@@ -26,11 +20,8 @@ import app.vitune.android.ui.screens.mood.MoreMoodsScreen
 import app.vitune.android.ui.screens.moodRoute
 import app.vitune.android.ui.screens.pipedPlaylistRoute
 import app.vitune.android.ui.screens.playlistRoute
-import app.vitune.android.ui.screens.search.SearchScreen
-import app.vitune.android.ui.screens.searchResultRoute
 import app.vitune.android.ui.screens.searchRoute
 import app.vitune.android.ui.screens.settingsRoute
-import app.vitune.android.utils.toast
 import app.vitune.compose.persist.PersistMapCleanup
 import app.vitune.compose.routing.Route0
 import app.vitune.compose.routing.RouteHandler
@@ -70,18 +61,19 @@ fun HomeScreen() {
 
         Content {
             Scaffold(
+                key = "home",
                 topIconButtonId = R.drawable.settings,
                 onTopIconButtonClick = { settingsRoute() },
                 tabIndex = UIStatePreferences.homeScreenTabIndex,
                 onTabChange = { UIStatePreferences.homeScreenTabIndex = it },
-                tabColumnContent = { item ->
-                    item(0, stringResource(R.string.quick_picks), R.drawable.sparkles)
-                    item(1, stringResource(R.string.discover), R.drawable.globe)
-                    item(2, stringResource(R.string.songs), R.drawable.musical_notes)
-                    item(3, stringResource(R.string.playlists), R.drawable.playlist)
-                    item(4, stringResource(R.string.artists), R.drawable.person)
-                    item(5, stringResource(R.string.albums), R.drawable.disc)
-                    item(6, stringResource(R.string.local), R.drawable.download)
+                tabColumnContent = {
+                    tab(0, R.string.quick_picks, R.drawable.sparkles)
+                    tab(1, R.string.discover, R.drawable.globe)
+                    tab(2, R.string.songs, R.drawable.musical_notes)
+                    tab(3, R.string.playlists, R.drawable.playlist)
+                    tab(4, R.string.artists, R.drawable.person)
+                    tab(5, R.string.albums, R.drawable.disc)
+                    tab(6, R.string.local, R.drawable.download)
                 }
             ) { currentTabIndex ->
                 saveableStateHolder.SaveableStateProvider(key = currentTabIndex) {
