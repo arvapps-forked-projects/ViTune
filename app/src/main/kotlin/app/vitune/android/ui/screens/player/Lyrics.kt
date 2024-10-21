@@ -439,7 +439,7 @@ fun Lyrics(
                         items = synchronizedLyrics.sentences.values.toImmutableList()
                     ) { index, sentence ->
                         val color by animateColorAsState(
-                            if (index == synchronizedLyrics.index) colorPalette.text
+                            if (index == synchronizedLyrics.index) Color.White
                             else colorPalette.textDisabled
                         )
 
