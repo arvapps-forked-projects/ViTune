@@ -48,6 +48,7 @@ object Innertube {
                 headers {
                     append("X-Goog-Api-Key", API_KEY)
                     append("x-origin", ORIGIN)
+                    append("origin", ORIGIN)
                 }
                 parameters {
                     append("prettyPrint", "false")
@@ -60,12 +61,13 @@ object Innertube {
     private const val API_KEY = "AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30"
     private const val ORIGIN = "https://music.youtube.com"
 
-    internal const val BROWSE = "/youtubei/v1/browse"
-    internal const val NEXT = "/youtubei/v1/next"
-    internal const val PLAYER = "/youtubei/v1/player"
-    internal const val QUEUE = "/youtubei/v1/music/get_queue"
-    internal const val SEARCH = "/youtubei/v1/search"
-    internal const val SEARCH_SUGGESTIONS = "/youtubei/v1/music/get_search_suggestions"
+    private const val BASE = "/youtubei/v1"
+    internal const val BROWSE = "$BASE/browse"
+    internal const val NEXT = "$BASE/next"
+    internal const val PLAYER = "$BASE/player"
+    internal const val QUEUE = "$BASE/music/get_queue"
+    internal const val SEARCH = "$BASE/search"
+    internal const val SEARCH_SUGGESTIONS = "$BASE/music/get_search_suggestions"
     internal const val MUSIC_RESPONSIVE_LIST_ITEM_RENDERER_MASK =
         "musicResponsiveListItemRenderer(flexColumns,fixedColumns,thumbnail,navigationEndpoint,badges)"
     internal const val MUSIC_TWO_ROW_ITEM_RENDERER_MASK =

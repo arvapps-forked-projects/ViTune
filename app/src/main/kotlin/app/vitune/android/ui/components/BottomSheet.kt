@@ -80,7 +80,7 @@ fun BottomSheet(
             )
         }
 ) {
-    CallbackPredictiveBackHandler(
+    if (state.value > state.collapsedBound) CallbackPredictiveBackHandler(
         enabled = !state.collapsing && backHandlerEnabled,
         onStart = { },
         onProgress = { state.collapse(progress = it) },

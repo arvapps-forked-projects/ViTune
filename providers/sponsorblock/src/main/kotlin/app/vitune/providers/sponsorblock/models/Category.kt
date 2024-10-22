@@ -20,5 +20,7 @@ enum class Category(val serialName: String) {
     @SerialName("music_offtopic")
     OfftopicMusic("music_offtopic"),
     @SerialName("filler")
-    Filler("filler")
+    Filler("filler"),
+    @SerialName("poi_highlight")
+    PoiHighlight("poi_highlight")
 }

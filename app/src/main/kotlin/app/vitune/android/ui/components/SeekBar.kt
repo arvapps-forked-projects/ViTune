@@ -62,6 +62,8 @@ import app.vitune.core.ui.utils.roundedShape
 import kotlin.math.PI
 import kotlin.math.sin
 
+// TODO: de-couple from binder
+
 @Composable
 fun SeekBar(
     binder: PlayerService.Binder,
@@ -120,6 +122,7 @@ fun SeekBar(
             ClassicSeekBarBody(
                 position = scrubbingPosition ?: animatedPosition.toLong(),
                 duration = media.duration,
+                poiTimestamp = binder.poiTimestamp,
                 isDragging = isDragging,
                 color = color,
                 backgroundColor = backgroundColor,
@@ -134,6 +137,7 @@ fun SeekBar(
             WavySeekBarBody(
                 position = scrubbingPosition ?: animatedPosition.toLong(),
                 duration = media.duration,
+                poiTimestamp = binder.poiTimestamp,
                 isDragging = isDragging,
                 color = color,
                 backgroundColor = backgroundColor,
@@ -151,6 +155,7 @@ fun SeekBar(
 private fun ClassicSeekBarBody(
     position: Long,
     duration: Long,
+    poiTimestamp: Long?,
     isDragging: Boolean,
     color: Color,
     backgroundColor: Color,
@@ -185,6 +190,12 @@ private fun ClassicSeekBarBody(
                     color = scrubberColor,
                     radius = currentScrubberRadius.toPx(),
                     center = center.copy(x = scrubberPosition)
+                )
+
+                if (poiTimestamp != null && position < poiTimestamp) drawPoi(
+                    range = range,
+                    position = poiTimestamp,
+                    color = color
                 )
 
                 if (drawSteps) for (i in position + 1..range.endInclusive) {
@@ -228,6 +239,7 @@ private fun ClassicSeekBarBody(
 private fun WavySeekBarBody(
     position: Long,
     duration: Long,
+    poiTimestamp: Long?,
     isDragging: Boolean,
     color: Color,
     backgroundColor: Color,
@@ -259,6 +271,12 @@ private fun WavySeekBarBody(
             .padding(horizontal = scrubberRadius)
             .drawWithContent {
                 drawContent()
+
+                if (poiTimestamp != null && position < poiTimestamp) drawPoi(
+                    range = range,
+                    position = poiTimestamp,
+                    color = color
+                )
 
                 drawScrubber(
                     range = range,
@@ -388,6 +406,23 @@ private fun ContentDrawScope.drawScrubber(
             height = heightPx
         ),
         cornerRadius = CornerRadius(widthPx / 2)
+    )
+}
+
+private fun ContentDrawScope.drawPoi(
+    range: ClosedRange<Long>,
+    position: Long,
+    color: Color,
+    width: Dp = 4.dp
+) {
+    val poiPosition = if (range.endInclusive < range.start) 0f
+    else (position - range.start) / (range.endInclusive - range.start).toFloat() * size.width
+
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(x = poiPosition, y = 0f),
+        size = Size(width = width.toPx(), height = size.height),
+        cornerRadius = CornerRadius((width / 2).toPx())
     )
 }
 

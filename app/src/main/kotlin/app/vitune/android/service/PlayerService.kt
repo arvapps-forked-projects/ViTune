@@ -19,7 +19,6 @@ import android.media.audiofx.LoudnessEnhancer
 import android.media.audiofx.PresetReverb
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
-import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.session.MediaSessionCompat
 import android.text.format.DateUtils
@@ -123,6 +122,8 @@ import app.vitune.providers.innertube.requests.player
 import app.vitune.providers.innertube.requests.searchPage
 import app.vitune.providers.innertube.utils.from
 import app.vitune.providers.sponsorblock.SponsorBlock
+import app.vitune.providers.sponsorblock.models.Action
+import app.vitune.providers.sponsorblock.models.Category
 import app.vitune.providers.sponsorblock.requests.segments
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -254,6 +255,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         )
 
     private val glyphInterface by lazy { GlyphInterface(applicationContext) }
+
+    private var poiTimestamp: Long? by mutableStateOf(null)
 
     override fun onBind(intent: Intent?): AndroidBinder {
         super.onBind(intent)
@@ -492,7 +495,10 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     override fun onPlayerError(error: PlaybackException) {
         super.onPlayerError(error)
 
-        if (error.findCause<InvalidResponseCodeException>()?.responseCode == 416) {
+        if (
+            error.findCause<InvalidResponseCodeException>()?.responseCode == 416 ||
+            error.findCause<VideoIdMismatchException>() != null
+        ) {
             player.pause()
             player.prepare()
             player.play()
@@ -679,25 +685,42 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     private fun maybeSponsorBlock() {
+        poiTimestamp = null
+
         if (!PlayerPreferences.sponsorBlockEnabled) {
             sponsorBlockJob?.cancel()
             sponsorBlockJob?.invokeOnCompletion { sponsorBlockJob = null }
             return
         }
+
         sponsorBlockJob?.cancel()
         sponsorBlockJob = coroutineScope.launch {
             mediaItemState.onStart { emit(mediaItemState.value) }.collectLatest { mediaItem ->
+                poiTimestamp = null
                 val videoId = mediaItem?.mediaId
                     ?.removePrefix("https://youtube.com/watch?v=")
                     ?.takeIf { it.isNotBlank() } ?: return@collectLatest
 
                 SponsorBlock
                     .segments(videoId)
-                    ?.map { segments -> segments.sortedBy { it.start.inWholeMilliseconds } }
+                    ?.onSuccess { segments ->
+                        poiTimestamp =
+                            segments.find { it.category == Category.PoiHighlight }?.start?.inWholeMilliseconds
+                    }
+                    ?.map { segments ->
+                        segments
+                            .sortedBy { it.start.inWholeMilliseconds }
+                            .filter { it.action == Action.Skip }
+                    }
                     ?.mapCatching { segments ->
-                        suspend fun posMillis() = withContext(Dispatchers.Main) { player.currentPosition }
-                        suspend fun speed() = withContext(Dispatchers.Main) { player.playbackParameters.speed }
-                        suspend fun seek(millis: Long) = withContext(Dispatchers.Main) { player.seekTo(millis) }
+                        suspend fun posMillis() =
+                            withContext(Dispatchers.Main) { player.currentPosition }
+
+                        suspend fun speed() =
+                            withContext(Dispatchers.Main) { player.playbackParameters.speed }
+
+                        suspend fun seek(millis: Long) =
+                            withContext(Dispatchers.Main) { player.seekTo(millis) }
 
                         val ctx = currentCoroutineContext()
                         val lastSegmentEnd =
@@ -1079,6 +1102,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             set(value) {
                 isInvincibilityEnabled = value
             }
+
+        val poiTimestamp get() = this@PlayerService.poiTimestamp
 
         fun setBitmapListener(listener: ((Bitmap?) -> Unit)?) = bitmapProvider.setListener(listener)
 

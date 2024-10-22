@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
 suspend fun Innertube.player(
     body: PlayerBody,
     pipedHost: String = "pipedapi.adminforge.de"
-) = runCatchingCancellable {
+): Result<PlayerResponse>? = runCatchingCancellable {
     val response = client.post(PLAYER) {
         setBody(body)
     }.body<PlayerResponse>()
@@ -49,6 +49,15 @@ suspend fun Innertube.player(
             }
         )
     )
+}?.recoverCatching {
+    if (body.context.client.clientName == "WEB_REMIX") throw it
+
+    Innertube.player(
+        body = body.copy(
+            context = Context.DefaultWeb
+        ),
+        pipedHost = pipedHost
+    )?.getOrThrow() ?: return@player null
 }
 
 @Serializable

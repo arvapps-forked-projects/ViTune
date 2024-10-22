@@ -12,8 +12,8 @@ import io.ktor.client.request.parameter
 
 suspend fun SponsorBlock.segments(
     videoId: String,
-    categories: List<Category>? = listOf(Category.Sponsor, Category.OfftopicMusic),
-    actions: List<Action>? = listOf(Action.Skip),
+    categories: List<Category>? = listOf(Category.Sponsor, Category.OfftopicMusic, Category.PoiHighlight),
+    actions: List<Action>? = listOf(Action.Skip, Action.POI),
     segments: List<SerializableUUID>? = null
 ) = runCatchingCancellable {
     httpClient.get("/api/skipSegments") {
