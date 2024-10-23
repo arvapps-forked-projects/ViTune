@@ -133,7 +133,10 @@ abstract class NotificationChannels {
 }
 
 inline fun <ThisRef, Return> readOnlyProvider(
-    crossinline provide: (thisRef: ThisRef, property: KProperty<*>) -> (thisRef: ThisRef, property: KProperty<*>) -> Return
+    crossinline provide: (
+        thisRef: ThisRef,
+        property: KProperty<*>
+    ) -> (thisRef: ThisRef, property: KProperty<*>) -> Return
 ) = PropertyDelegateProvider<ThisRef, ReadOnlyProperty<ThisRef, Return>> { thisRef, property ->
     val provider = provide(thisRef, property)
     ReadOnlyProperty { innerThisRef, innerProperty -> provider(innerThisRef, innerProperty) }

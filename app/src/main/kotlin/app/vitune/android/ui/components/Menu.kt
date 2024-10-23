@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import app.vitune.android.LocalPlayerAwareWindowInsets
 import app.vitune.android.ui.modifiers.pressable

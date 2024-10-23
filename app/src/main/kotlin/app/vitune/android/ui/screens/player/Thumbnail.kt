@@ -63,7 +63,7 @@ import app.vitune.android.utils.windowState
 import app.vitune.core.ui.Dimensions
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.utils.px
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import java.net.UnknownHostException
 import java.nio.channels.UnresolvedAddressException

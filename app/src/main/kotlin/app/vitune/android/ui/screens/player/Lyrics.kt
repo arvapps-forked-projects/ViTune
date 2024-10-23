@@ -389,8 +389,8 @@ fun Lyrics(
             lyricsState.sentences?.let {
                 SynchronizedLyrics(it.toImmutableMap()) {
                     binder?.player?.let { player ->
-                        player.currentPosition + UPDATE_DELAY + lyricsState.offset - (lyrics?.startTime
-                            ?: 0L)
+                        player.currentPosition + UPDATE_DELAY + lyricsState.offset -
+                                (lyrics?.startTime ?: 0L)
                     } ?: 0L
                 }
             }

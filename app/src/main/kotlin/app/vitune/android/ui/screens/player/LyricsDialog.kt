@@ -34,7 +34,7 @@ import app.vitune.android.utils.thumbnail
 import app.vitune.android.utils.windowState
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.utils.px
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 @Composable
 fun LyricsDialog(

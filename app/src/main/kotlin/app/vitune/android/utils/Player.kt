@@ -67,19 +67,19 @@ fun Player.forceSeekToPrevious(
     seekToStart: Boolean = true
 ): Unit = when {
     seekToStart && currentPosition > maxSeekToPreviousPosition -> seekToPrevious()
-    hideExplicit -> {
-        if (mediaItemCount > 1) {
-            var i = currentMediaItemIndex - 1
-            while (
-                i !in (0 until mediaItemCount) ||
-                getMediaItemAt(i).mediaMetadata.extras?.songBundle?.explicit == true
-            ) {
-                if (i <= 0) i = mediaItemCount - 1 else i--
-            }
-            seekTo(i, C.TIME_UNSET)
-        } else forceSeekToPrevious(hideExplicit = false)
-        // fall back to default behavior if there is only a single song
+    hideExplicit -> if (mediaItemCount <= 1) forceSeekToPrevious(hideExplicit = false)
+    else {
+        var i = currentMediaItemIndex - 1
+        while (
+            i !in (0 until mediaItemCount) ||
+            getMediaItemAt(i).mediaMetadata.extras?.songBundle?.explicit == true
+        ) {
+            if (i <= 0) i = mediaItemCount - 1 else i--
+        }
+        seekTo(i, C.TIME_UNSET)
     }
+    // fall back to default behavior if there is only a single song
+
     hasPreviousMediaItem() -> seekToPreviousMediaItem()
     mediaItemCount > 0 -> seekTo(mediaItemCount - 1, C.TIME_UNSET)
     else -> {}

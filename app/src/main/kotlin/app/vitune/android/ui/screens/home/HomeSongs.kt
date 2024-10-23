@@ -340,7 +340,8 @@ fun HideSongDialog(
     )
 }
 
-@Suppress("UnusedReceiverParameter")
+// Row content, for convenience, doesn't need modifier/receiver
+@Suppress("UnusedReceiverParameter", "ModifierMissing")
 @Composable
 fun RowScope.HeaderSongSortBy(
     sortBy: SongSortBy,

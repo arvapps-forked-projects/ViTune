@@ -246,7 +246,6 @@ object Innertube {
         }
     }
 
-    @Suppress("ReturnCount")
     fun MusicNavigationButtonRenderer.toMood(): Mood.Item? {
         return Mood.Item(
             title = buttonText.runs.firstOrNull()?.text ?: return null,

@@ -53,7 +53,7 @@ data class Playlist(
 
         val uploaderId
             get() = if (uploaderUrl.startsWith("/channel/")) uploaderUrl.substringAfter("/channel/")
-            else Url(uploaderUrl).pathSegments.lastOrNull()
+            else Url(uploaderUrl).segments.lastOrNull()
 
         val duration get() = durationSeconds.seconds
     }

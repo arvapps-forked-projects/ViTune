@@ -102,7 +102,7 @@ import app.vitune.core.ui.utils.px
 import app.vitune.core.ui.utils.roundedShape
 import app.vitune.core.ui.utils.songBundle
 import app.vitune.providers.innertube.models.NavigationEndpoint
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.absoluteValue
 

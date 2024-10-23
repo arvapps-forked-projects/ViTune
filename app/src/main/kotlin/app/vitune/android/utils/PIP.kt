@@ -116,19 +116,19 @@ private val Activity?.pip get() = if (isAtLeastAndroid7) this?.isInPictureInPict
 
 @Composable
 fun isInPip(
-    onChanged: (Boolean) -> Unit = { }
+    onChange: (Boolean) -> Unit = { }
 ): Boolean {
     val context = LocalContext.current
     val activity = remember(context) { context.findActivityNullable() }
-    val currentOnChanged by rememberUpdatedState(onChanged)
+    val currentOnChange by rememberUpdatedState(onChange)
     var pip by rememberSaveable { mutableStateOf(activity.pip) }
 
-    DisposableEffect(activity, currentOnChanged) {
+    DisposableEffect(activity, currentOnChange) {
         if (activity !is OnPictureInPictureModeChangedProvider) return@DisposableEffect onDispose { }
 
         val listener: (PictureInPictureModeChangedInfo) -> Unit = {
             pip = it.isInPictureInPictureMode
-            currentOnChanged(pip)
+            currentOnChange(pip)
         }
         activity.addOnPictureInPictureModeChangedListener(listener)
 
@@ -168,8 +168,8 @@ fun Modifier.pip(
 fun Pip(
     numerator: Int,
     denominator: Int,
-    actions: ActionReceiver? = null,
     modifier: Modifier = Modifier,
+    actions: ActionReceiver? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     val context = LocalContext.current

@@ -22,10 +22,8 @@ import app.vitune.android.preferences.PlayerPreferences
 import app.vitune.android.ui.components.themed.LinearProgressIndicator
 import app.vitune.android.ui.screens.Route
 import app.vitune.core.data.enums.ExoPlayerDiskCacheSize
-import coil.Coil
-import coil.annotation.ExperimentalCoilApi
+import coil3.imageLoader
 
-@kotlin.OptIn(ExperimentalCoilApi::class)
 @OptIn(UnstableApi::class)
 @Route
 @Composable
@@ -36,7 +34,7 @@ fun CacheSettings() = with(DataPreferences) {
     SettingsCategoryScreen(title = stringResource(R.string.cache)) {
         SettingsDescription(text = stringResource(R.string.cache_description))
 
-        Coil.imageLoader(context).diskCache?.let { diskCache ->
+        context.imageLoader.diskCache?.let { diskCache ->
             val diskCacheSize by remember { derivedStateOf { diskCache.size } }
             val formattedSize = remember(diskCacheSize) {
                 Formatter.formatShortFileSize(context, diskCacheSize)

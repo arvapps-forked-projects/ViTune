@@ -76,7 +76,7 @@ fun OnlineSearch(
     onViewPlaylist: (String) -> Unit,
     decorationBox: @Composable (@Composable () -> Unit) -> Unit,
     focused: Boolean,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) = Box(modifier = modifier) {
     val (colorPalette, typography) = LocalAppearance.current
 
@@ -104,7 +104,7 @@ fun OnlineSearch(
         runCatching {
             Url(textFieldValue.text).takeIf {
                 it.host.endsWith("youtube.com", ignoreCase = true) &&
-                        it.pathSegments.lastOrNull()?.equals("playlist", ignoreCase = true) == true
+                        it.segments.lastOrNull()?.equals("playlist", ignoreCase = true) == true
             }?.parameters?.get("list")
         }.getOrNull()
     }

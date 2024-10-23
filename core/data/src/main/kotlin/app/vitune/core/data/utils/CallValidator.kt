@@ -66,30 +66,32 @@ class CallValidator(
             else signatures.firstOrNull()?.toByteArray()?.sha256
         }
 
+    @Suppress("ImplicitDefaultLocale") // not relevant
     private val ByteArray.sha256: String?
         get() = runCatching {
             val md = MessageDigest.getInstance("SHA256")
             md.update(this)
             md.digest()
-        }.getOrNull()
-            ?.joinToString(":") { String.format("%02x", it) }
+        }.getOrNull()?.joinToString(":") { String.format("%02x", it) }
 }
 
 @JvmInline
 value class Whitelist(private val map: WhitelistMap = mapOf()) {
     companion object {
-        fun parse(parser: XmlResourceParser) = Whitelist(buildMap {
-            runCatching {
-                var event = parser.next()
+        fun parse(parser: XmlResourceParser) = Whitelist(
+            buildMap {
+                runCatching {
+                    var event = parser.next()
 
-                while (event != XmlResourceParser.END_DOCUMENT) {
-                    if (event == XmlResourceParser.START_TAG && parser.name == "signature")
-                        putV2Tag(parser)
+                    while (event != XmlResourceParser.END_DOCUMENT) {
+                        if (event == XmlResourceParser.START_TAG && parser.name == "signature")
+                            putV2Tag(parser)
 
-                    event = parser.next()
+                        event = parser.next()
+                    }
                 }
             }
-        })
+        )
 
         private fun MutableMap<String, Set<Key>>.putV2Tag(parser: XmlResourceParser) =
             runCatching {

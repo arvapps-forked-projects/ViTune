@@ -127,7 +127,6 @@ object KuGou {
         return "$newArtist - $newTitle"
     }
 
-    @Suppress("ReturnCount")
     private fun String.extract(startDelimiter: String, endDelimiter: Char): Pair<String, String> {
         val startIndex = indexOf(startDelimiter).takeIf { it != -1 } ?: return this to ""
         val endIndex = indexOf(endDelimiter, startIndex).takeIf { it != -1 } ?: return this to ""

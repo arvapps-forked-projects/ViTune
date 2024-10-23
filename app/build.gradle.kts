@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -100,8 +102,10 @@ ksp {
 }
 
 composeCompiler {
-    enableStrongSkippingMode = true
-    enableNonSkippingGroupOptimization = true
+    featureFlags = setOf(
+        ComposeFeatureFlag.StrongSkipping,
+        ComposeFeatureFlag.OptimizeNonSkippingGroups
+    )
 
     if (project.findProperty("enableComposeCompilerReports") == "true") {
         val dest = layout.buildDirectory.dir("compose_metrics")
@@ -126,9 +130,11 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.util)
     implementation(libs.compose.shimmer)
-    implementation(libs.compose.coil)
     implementation(libs.compose.lottie)
     implementation(libs.compose.material3)
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.ktor)
 
     implementation(libs.palette)
     implementation(libs.monet)

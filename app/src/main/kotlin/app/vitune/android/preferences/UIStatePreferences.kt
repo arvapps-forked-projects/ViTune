@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import app.vitune.android.GlobalPreferencesHolder
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 object UIStatePreferences : GlobalPreferencesHolder() {
@@ -19,17 +20,22 @@ object UIStatePreferences : GlobalPreferencesHolder() {
     private var visibleTabs by json(mapOf<String, List<String>>())
 
     @Composable
-    fun mutableTabStateOf(key: String, default: List<String> = listOf()): MutableState<ImmutableList<String>> =
-        remember(key, default, visibleTabs) {
-            mutableStateOf(
-                value = visibleTabs.getOrDefault(key, default).toImmutableList(),
-                policy = object : SnapshotMutationPolicy<ImmutableList<String>> {
-                    override fun equivalent(a: ImmutableList<String>, b: ImmutableList<String>): Boolean {
-                        val eq = a == b
-                        if (!eq) visibleTabs += key to b
-                        return eq
-                    }
+    fun mutableTabStateOf(
+        key: String,
+        default: ImmutableList<String> = persistentListOf()
+    ): MutableState<ImmutableList<String>> = remember(key, default, visibleTabs) {
+        mutableStateOf(
+            value = visibleTabs.getOrDefault(key, default).toImmutableList(),
+            policy = object : SnapshotMutationPolicy<ImmutableList<String>> {
+                override fun equivalent(
+                    a: ImmutableList<String>,
+                    b: ImmutableList<String>
+                ): Boolean {
+                    val eq = a == b
+                    if (!eq) visibleTabs += key to b
+                    return eq
                 }
-            )
-        }
+            }
+        )
+    }
 }

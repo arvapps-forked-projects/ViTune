@@ -340,7 +340,9 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 callback: (T) -> Unit
             ) = launch { prop.stateFlow.collectLatest { handler.post { callback(it) } } }
 
-            subscribe(AppearancePreferences.isShowingThumbnailInLockscreenProperty) { maybeShowSongCoverInLockScreen() }
+            subscribe(AppearancePreferences.isShowingThumbnailInLockscreenProperty) {
+                maybeShowSongCoverInLockScreen()
+            }
 
             subscribe(PlayerPreferences.bassBoostLevelProperty) { maybeBassBoost() }
             subscribe(PlayerPreferences.bassBoostProperty) { maybeBassBoost() }
@@ -352,7 +354,9 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 player.setPlaybackPitch(it.coerceAtLeast(0.01f))
             }
             subscribe(PlayerPreferences.queueLoopEnabledProperty) { updateRepeatMode() }
-            subscribe(PlayerPreferences.resumePlaybackWhenDeviceConnectedProperty) { maybeResumePlaybackWhenDeviceConnected() }
+            subscribe(PlayerPreferences.resumePlaybackWhenDeviceConnectedProperty) {
+                maybeResumePlaybackWhenDeviceConnected()
+            }
             subscribe(PlayerPreferences.skipSilenceProperty) { player.skipSilenceEnabled = it }
             subscribe(PlayerPreferences.speedProperty) {
                 player.setPlaybackSpeed(it.coerceAtLeast(0.01f))
@@ -633,7 +637,6 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         }
     }
 
-    @Suppress("ReturnCount")
     private fun maybeNormalizeVolume() {
         if (!PlayerPreferences.volumeNormalization) {
             loudnessEnhancer?.enabled = false
@@ -684,6 +687,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         }
     }
 
+    @Suppress("CyclomaticComplexMethod") // TODO: evaluate CyclomaticComplexMethod threshold
     private fun maybeSponsorBlock() {
         poiTimestamp = null
 
@@ -726,6 +730,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                         val lastSegmentEnd =
                             segments.lastOrNull()?.end?.inWholeMilliseconds ?: return@mapCatching
 
+                        @Suppress("LoopWithTooManyJumpStatements")
                         do {
                             if (lastSegmentEnd < posMillis()) {
                                 yield()
@@ -741,7 +746,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                                 ((nextSegment.start.inWholeMilliseconds - posMillis()) / speed().toDouble()).milliseconds
                             )
 
-                            if (posMillis() !in nextSegment.start.inWholeMilliseconds..nextSegment.end.inWholeMilliseconds) {
+                            if (posMillis().milliseconds !in nextSegment.start..nextSegment.end) {
                                 // Player is not in the segment for some reason, maybe the user seeked in the meantime
                                 yield()
                                 continue
@@ -851,19 +856,23 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
     private fun sendOpenEqualizerIntent() = sendBroadcast(
         Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION).apply {
-            replaceExtras(EqualizerIntentBundleAccessor.bundle {
-                audioSession = player.audioSessionId
-                packageName = packageName
-                contentType = AudioEffect.CONTENT_TYPE_MUSIC
-            })
+            replaceExtras(
+                EqualizerIntentBundleAccessor.bundle {
+                    audioSession = player.audioSessionId
+                    packageName = packageName
+                    contentType = AudioEffect.CONTENT_TYPE_MUSIC
+                }
+            )
         }
     )
 
     private fun sendCloseEqualizerIntent() = sendBroadcast(
         Intent(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION).apply {
-            replaceExtras(EqualizerIntentBundleAccessor.bundle {
-                audioSession = player.audioSessionId
-            })
+            replaceExtras(
+                EqualizerIntentBundleAccessor.bundle {
+                    audioSession = player.audioSessionId
+                }
+            )
         }
     )
 
@@ -1298,6 +1307,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             SimpleCache(directory, cacheEvictor, createDatabaseProvider(context))
         }
 
+        @Suppress("CyclomaticComplexMethod")
         fun createYouTubeDataSourceResolverFactory(
             context: Context,
             cache: Cache,
@@ -1326,7 +1336,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             } ?: this
 
             if (
-                dataSpec.isLocal || ((chunkLength != null) && cache.isCached(
+                dataSpec.isLocal || (chunkLength != null && cache.isCached(
                     /* key = */ mediaId,
                     /* position = */ dataSpec.position,
                     /* length = */ chunkLength

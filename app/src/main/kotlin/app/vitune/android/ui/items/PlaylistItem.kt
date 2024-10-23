@@ -42,7 +42,7 @@ import app.vitune.core.ui.shimmer
 import app.vitune.core.ui.utils.px
 import app.vitune.core.ui.utils.roundedShape
 import app.vitune.providers.innertube.Innertube
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf

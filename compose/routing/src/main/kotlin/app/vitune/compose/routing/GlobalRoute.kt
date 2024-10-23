@@ -33,6 +33,8 @@ fun CallbackPredictiveBackHandler(
 ) = PredictiveBackHandler(enabled = enabled) { progress ->
     onStart()
 
+    // The meaning of CancellationException is different here (normally CancellationExceptions should be rethrowed)
+    @Suppress("SwallowedException")
     try {
         progress.collect {
             onProgress(it.progress)

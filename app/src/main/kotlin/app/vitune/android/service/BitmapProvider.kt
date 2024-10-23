@@ -3,13 +3,14 @@ package app.vitune.android.service
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import androidx.core.graphics.applyCanvas
 import app.vitune.android.utils.thumbnail
-import coil.imageLoader
-import coil.request.Disposable
-import coil.request.ImageRequest
+import coil3.imageLoader
+import coil3.request.Disposable
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
+import coil3.toBitmap
 
 context(Context)
 class BitmapProvider(
@@ -84,7 +85,7 @@ class BitmapProvider(
                         onDone(bitmap)
                     },
                     onSuccess = { _, result ->
-                        lastBitmap = (result.drawable as BitmapDrawable).bitmap
+                        lastBitmap = result.image.run { toBitmap(width, height) }
                         onDone(bitmap)
                     }
                 )

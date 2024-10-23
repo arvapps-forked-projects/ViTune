@@ -141,13 +141,13 @@ fun rememberEqualizerLauncher(
     return rememberUpdatedState {
         try {
             launcher.launch(
-                Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
-                    replaceExtras(EqualizerIntentBundleAccessor.bundle {
+                Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).replaceExtras(
+                    EqualizerIntentBundleAccessor.bundle {
                         audioSessionId()?.let { audioSession = it }
                         packageName = context.packageName
                         this.contentType = contentType
-                    })
-                }
+                    }
+                )
             )
         } catch (e: ActivityNotFoundException) {
             context.toast(context.getString(R.string.no_equalizer_installed))

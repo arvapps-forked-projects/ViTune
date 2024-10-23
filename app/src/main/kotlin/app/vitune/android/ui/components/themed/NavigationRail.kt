@@ -182,9 +182,9 @@ inline fun NavigationRail(
     noinline onTopIconButtonClick: () -> Unit,
     tabIndex: Int,
     crossinline onTabIndexChange: (Int) -> Unit,
-    modifier: Modifier = Modifier,
     hiddenTabs: ImmutableList<String>,
     crossinline setHiddenTabs: (List<String>) -> Unit,
+    modifier: Modifier = Modifier,
     crossinline content: TabsBuilder.() -> Unit
 ) {
     val (colorPalette, typography) = LocalAppearance.current

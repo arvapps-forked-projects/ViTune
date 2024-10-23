@@ -37,7 +37,7 @@ import app.vitune.core.ui.shimmer
 import app.vitune.core.ui.utils.px
 import app.vitune.core.ui.utils.songBundle
 import app.vitune.providers.innertube.Innertube
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 @Composable
 fun SongItem(

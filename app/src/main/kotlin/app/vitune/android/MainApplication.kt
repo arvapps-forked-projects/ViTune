@@ -112,10 +112,14 @@ import app.vitune.providers.innertube.Innertube
 import app.vitune.providers.innertube.models.bodies.BrowseBody
 import app.vitune.providers.innertube.requests.playlistPage
 import app.vitune.providers.innertube.requests.song
-import coil.ImageLoader
-import coil.ImageLoaderFactory
-import coil.disk.DiskCache
-import coil.util.DebugLogger
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.disk.DiskCache
+import coil3.disk.directory
+import coil3.memory.MemoryCache
+import coil3.request.crossfade
+import coil3.util.DebugLogger
 import com.kieronquinn.monetcompat.core.MonetActivityAccessException
 import com.kieronquinn.monetcompat.core.MonetCompat
 import com.kieronquinn.monetcompat.interfaces.MonetColorsChangedListener
@@ -266,7 +270,10 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
             }
 
             val pip = isInPip(
-                onChanged = { if (it && vm.binder?.player?.shouldBePlaying == true) playerBottomSheetState.expandSoft() }
+                onChange = {
+                    if (!it || vm.binder?.player?.shouldBePlaying != true) return@isInPip
+                    playerBottomSheetState.expandSoft()
+                }
             )
 
             KeyedCrossfade(state = pip) { currentPip ->
@@ -378,11 +385,15 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                     MediaStore.Audio.Artists.ENTRY_CONTENT_TYPE -> extras.artist
                     MediaStore.Audio.Albums.ENTRY_CONTENT_TYPE -> extras.album
                     "vnd.android.cursor.item/audio" -> listOfNotNull(
-                        extras.album, extras.artist, extras.genre, extras.title
+                        extras.album,
+                        extras.artist,
+                        extras.genre,
+                        extras.title
                     ).joinToString(separator = " ")
 
                     @Suppress("deprecation")
-                    MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE -> extras.playlist
+                    MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE
+                    -> extras.playlist
 
                     else -> null
                 }
@@ -421,6 +432,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
 }
 
 context(Context)
+@Suppress("CyclomaticComplexMethod")
 fun handleUrl(
     uri: Uri,
     binder: PlayerService.Binder?
@@ -484,7 +496,7 @@ val LocalPlayerAwareWindowInsets =
     compositionLocalOf<WindowInsets> { error("No player insets provided") }
 val LocalCredentialManager = staticCompositionLocalOf { Dependencies.credentialManager }
 
-class MainApplication : Application(), ImageLoaderFactory, Configuration.Provider {
+class MainApplication : Application(), SingletonImageLoader.Factory, Configuration.Provider {
     override fun onCreate() {
         StrictMode.setVmPolicy(
             VmPolicy.Builder()
@@ -505,15 +517,19 @@ class MainApplication : Application(), ImageLoaderFactory, Configuration.Provide
         ServiceNotifications.createAll()
     }
 
-    override fun newImageLoader() = ImageLoader.Builder(this)
+    override fun newImageLoader(context: PlatformContext) = ImageLoader.Builder(this)
         .crossfade(true)
-        .respectCacheHeaders(false)
-        .diskCache(
+        .memoryCache {
+            MemoryCache.Builder()
+                .maxSizePercent(context, 0.1)
+                .build()
+        }
+        .diskCache {
             DiskCache.Builder()
-                .directory(cacheDir.resolve("coil"))
+                .directory(context.cacheDir.resolve("coil"))
                 .maxSizeBytes(DataPreferences.coilDiskCacheMaxSize.bytes)
                 .build()
-        )
+        }
         .let { if (BuildConfig.DEBUG) it.logger(DebugLogger()) else it }
         .build()
 

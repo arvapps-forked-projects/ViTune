@@ -107,8 +107,11 @@ fun BottomSheet(
     }
 }
 
+@Suppress("TooManyFunctions")
 @Stable
-class BottomSheetState internal constructor(
+class BottomSheetState
+@Suppress("LongParameterList")
+internal constructor(
     density: Density,
     initialValue: Dp,
     private val coroutineScope: CoroutineScope,
@@ -267,9 +270,9 @@ class BottomSheetState internal constructor(
 
 @Composable
 fun rememberBottomSheetState(
-    key: Any? = Unit,
     dismissedBound: Dp,
     expandedBound: Dp,
+    key: Any? = Unit,
     collapsedBound: Dp = dismissedBound,
     initialAnchor: BottomSheetState.Anchor = BottomSheetState.Anchor.Dismissed
 ): BottomSheetState {

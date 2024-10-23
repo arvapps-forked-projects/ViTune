@@ -7,12 +7,16 @@ import kotlinx.serialization.Serializable
 enum class Action(val serialName: String) {
     @SerialName("skip")
     Skip("skip"),
+
     @SerialName("mute")
     Mute("mute"),
+
     @SerialName("full")
     Full("full"),
+
     @SerialName("poi")
     POI("poi"),
+
     @SerialName("chapter")
     Chapter("chapter")
 }

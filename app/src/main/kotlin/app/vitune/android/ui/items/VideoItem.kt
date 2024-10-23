@@ -26,7 +26,7 @@ import app.vitune.core.ui.overlay
 import app.vitune.core.ui.shimmer
 import app.vitune.core.ui.utils.roundedShape
 import app.vitune.providers.innertube.Innertube
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 @Composable
 fun VideoItem(

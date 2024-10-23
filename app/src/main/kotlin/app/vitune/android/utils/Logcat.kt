@@ -28,12 +28,39 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.WriteWith
 import java.io.IOException
 
+private val logcatDateTimeFormat = LocalDateTime.Format {
+    date(
+        LocalDate.Format {
+            year()
+            char('-')
+            monthNumber()
+            char('-')
+            dayOfMonth()
+        }
+    )
+
+    char(' ')
+
+    time(
+        LocalTime.Format {
+            hour()
+            char(':')
+            minute()
+            char(':')
+            second()
+            char('.')
+            secondFraction(3)
+        }
+    )
+}
+
 @Immutable
 sealed interface Logcat : Parcelable {
     val id: Int
 
     companion object {
         // @formatter:off
+        @Suppress("MaximumLineLength")
         private val regex = "^(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3})\\s+(\\w)/(.+?)\\(\\s*(\\d+)\\): (.*)$".toRegex()
         // @formatter:on
 
@@ -43,27 +70,10 @@ sealed interface Logcat : Parcelable {
                 .mapNotNull { it?.value }
 
             FormattedLine(
-                timestamp = LocalDateTime.parse(timestamp, LocalDateTime.Format {
-                    date(LocalDate.Format {
-                        year()
-                        char('-')
-                        monthNumber()
-                        char('-')
-                        dayOfMonth()
-                    })
-
-                    char(' ')
-
-                    time(LocalTime.Format {
-                        hour()
-                        char(':')
-                        minute()
-                        char(':')
-                        second()
-                        char('.')
-                        secondFraction(3)
-                    })
-                }).toInstant(TimeZone.UTC),
+                timestamp = LocalDateTime.parse(
+                    input = timestamp,
+                    format = logcatDateTimeFormat
+                ).toInstant(TimeZone.UTC),
                 level = FormattedLine.Level.codeLut[level.firstOrNull()]
                     ?: FormattedLine.Level.Unknown,
                 tag = tag,
@@ -78,12 +88,14 @@ sealed interface Logcat : Parcelable {
 
         fun logAsFlow() = flow {
             val proc =
-                Runtime.getRuntime().exec("/system/bin/logcat -v time,year --pid=${Process.myPid()}")
+                Runtime.getRuntime()
+                    .exec("/system/bin/logcat -v time,year --pid=${Process.myPid()}")
             val reader = proc.inputStream.bufferedReader()
             val ctx = currentCoroutineContext()
 
             var id = 0
 
+            @Suppress("LoopWithTooManyJumpStatements", "SwallowedException")
             while (ctx.isActive) {
                 try {
                     emit((reader.readLine() ?: break).toLine(id++))
