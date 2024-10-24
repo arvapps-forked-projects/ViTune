@@ -115,6 +115,8 @@ import app.vitune.providers.innertube.requests.song
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.bitmapFactoryExifOrientationStrategy
+import coil3.decode.ExifOrientationStrategy
 import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
@@ -530,6 +532,7 @@ class MainApplication : Application(), SingletonImageLoader.Factory, Configurati
                 .maxSizeBytes(DataPreferences.coilDiskCacheMaxSize.bytes)
                 .build()
         }
+        .bitmapFactoryExifOrientationStrategy(ExifOrientationStrategy.IGNORE)
         .let { if (BuildConfig.DEBUG) it.logger(DebugLogger()) else it }
         .build()
 
