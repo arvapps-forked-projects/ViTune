@@ -52,6 +52,7 @@ import app.vitune.android.R
 import app.vitune.android.preferences.PlayerPreferences
 import app.vitune.android.service.LoginRequiredException
 import app.vitune.android.service.PlayableFormatNotFoundException
+import app.vitune.android.service.RestrictedVideoException
 import app.vitune.android.service.UnplayableException
 import app.vitune.android.service.VideoIdMismatchException
 import app.vitune.android.service.isLocal
@@ -247,7 +248,9 @@ fun Thumbnail(
 
                         is PlayableFormatNotFoundException -> stringResource(R.string.error_unplayable)
                         is UnplayableException -> stringResource(R.string.error_source_deleted)
-                        is LoginRequiredException -> stringResource(R.string.error_server_restrictions)
+                        is LoginRequiredException, is RestrictedVideoException ->
+                            stringResource(R.string.error_server_restrictions)
+
                         is VideoIdMismatchException -> stringResource(R.string.error_id_mismatch)
                         else -> stringResource(R.string.error_unknown_playback)
                     }

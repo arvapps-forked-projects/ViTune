@@ -500,8 +500,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         super.onPlayerError(error)
 
         if (
-            error.findCause<InvalidResponseCodeException>()?.responseCode == 416 ||
-            error.findCause<VideoIdMismatchException>() != null
+            error.findCause<InvalidResponseCodeException>()?.responseCode == 416
         ) {
             player.pause()
             player.prepare()
@@ -1389,7 +1388,13 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                             }
                         }
 
-                        format.url
+                        runCatching {
+                            runBlocking(Dispatchers.IO) {
+                                format.findUrl()
+                            }
+                        }.getOrElse {
+                            throw RestrictedVideoException(it)
+                        }
                     }
 
                     "UNPLAYABLE" -> throw UnplayableException()
@@ -1402,7 +1407,13 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     )
                 } ?: throw UnplayableException()
 
-                val uri = url.toUri()
+                val uri = url.toUri().let {
+                    if (body.cpn == null) it
+                    else it
+                        .buildUpon()
+                        .appendQueryParameter("cpn", body.cpn)
+                        .build()
+                }
 
                 uriCache.push(
                     key = mediaId,

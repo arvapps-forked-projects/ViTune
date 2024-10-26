@@ -173,6 +173,7 @@
     <string name="size">Grootte</string>
     <string name="cached">Gecachet</string>
     <string name="loudness">Luidheid</string>
+    <string name="reload">Herlaad</string>
 
     <string name="view_album">Toon album</string>
     <string name="view_playlist">Toon afspeellijst</string>

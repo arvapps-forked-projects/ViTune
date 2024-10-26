@@ -1,13 +1,17 @@
 package app.vitune.providers.innertube.models
 
+import app.vitune.providers.innertube.Innertube
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 data class PlayerResponse(
     val playabilityStatus: PlayabilityStatus?,
     val playerConfig: PlayerConfig?,
     val streamingData: StreamingData?,
-    val videoDetails: VideoDetails?
+    val videoDetails: VideoDetails?,
+    @Transient
+    val cpn: String? = null
 ) {
     @Serializable
     data class PlayabilityStatus(
@@ -20,7 +24,7 @@ data class PlayerResponse(
     ) {
         @Serializable
         data class AudioConfig(
-            private val loudnessDb: Double?
+            internal val loudnessDb: Double?
         ) {
             // For music clients only
             val normalizedLoudnessDb: Float?
@@ -34,7 +38,10 @@ data class PlayerResponse(
         val expiresInSeconds: Long?
     ) {
         val highestQualityFormat: AdaptiveFormat?
-            get() = adaptiveFormats?.findLast { it.itag == 251 || it.itag == 140 }
+            get() = adaptiveFormats?.filter { it.url != null || it.signatureCipher != null }?.let { formats ->
+                formats.findLast { it.itag == 251 || it.itag == 140 }
+                    ?: formats.maxBy { it.bitrate ?: 0L }
+            }
 
         @Serializable
         data class AdaptiveFormat(
@@ -48,8 +55,11 @@ data class PlayerResponse(
             val lastModified: Long?,
             val loudnessDb: Double?,
             val audioSampleRate: Int?,
-            val url: String?
-        )
+            val url: String?,
+            val signatureCipher: String?
+        ) {
+            suspend fun findUrl() = url ?: signatureCipher?.let { Innertube.decodeSignatureCipher(it) }
+        }
     }
 
     @Serializable

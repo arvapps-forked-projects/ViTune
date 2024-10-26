@@ -7,8 +7,9 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import app.vitune.android.utils.center
+import app.vitune.android.utils.disabled
 import app.vitune.android.utils.medium
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.primaryButton
@@ -26,7 +27,7 @@ fun SecondaryTextButton(
 
     BasicText(
         text = text,
-        style = typography.xxs.medium.copy(textAlign = TextAlign.Center),
+        style = typography.xxs.medium.center.let { if (enabled) it else it.disabled },
         modifier = modifier
             .clip(16.dp.roundedShape)
             .clickable(enabled = enabled, onClick = onClick)

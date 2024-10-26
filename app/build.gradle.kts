@@ -20,7 +20,7 @@ android {
         minSdk = 21
         targetSdk = 35
 
-        versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 11
+        versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 12
         versionName = project.version.toString()
 
         multiDexEnabled = true
@@ -157,6 +157,10 @@ dependencies {
 
     implementation(libs.room)
     ksp(libs.room.compiler)
+
+    implementation(libs.log4j)
+    implementation(libs.slf4j)
+    implementation(libs.logback)
 
     implementation(projects.providers.github)
     implementation(projects.providers.innertube)

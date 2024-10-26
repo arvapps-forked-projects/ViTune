@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,8 @@ import app.vitune.android.Database
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.models.Format
+import app.vitune.android.service.PlayerService
+import app.vitune.android.ui.components.themed.SecondaryTextButton
 import app.vitune.android.utils.color
 import app.vitune.android.utils.medium
 import app.vitune.core.ui.LocalAppearance
@@ -47,6 +50,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
@@ -66,11 +70,44 @@ fun StatsForNerds(
     val context = LocalContext.current
     val binder = LocalPlayerServiceBinder.current
 
+    val coroutineScope = rememberCoroutineScope()
+
     var cachedBytes by remember(binder, mediaId) {
         mutableLongStateOf(binder?.cache?.getCachedBytes(mediaId, 0, -1) ?: 0L)
     }
 
     var format by remember { mutableStateOf<Format?>(null) }
+
+    var hasReloaded by rememberSaveable { mutableStateOf(false) }
+
+    suspend fun reload(binder: PlayerService.Binder) {
+        binder.player.currentMediaItem
+            ?.takeIf { it.mediaId == mediaId }
+            ?.let { mediaItem ->
+                withContext(Dispatchers.IO) {
+                    delay(2000)
+
+                    Innertube
+                        .player(PlayerBody(videoId = mediaId))
+                        ?.onSuccess { response ->
+                            response?.streamingData?.highestQualityFormat?.let { format ->
+                                Database.insert(mediaItem)
+                                Database.insert(
+                                    Format(
+                                        songId = mediaId,
+                                        itag = format.itag,
+                                        mimeType = format.mimeType,
+                                        bitrate = format.bitrate,
+                                        loudnessDb = response.playerConfig?.audioConfig?.normalizedLoudnessDb,
+                                        contentLength = format.contentLength,
+                                        lastModified = format.lastModified
+                                    )
+                                )
+                            }
+                        }
+                }
+            }
+    }
 
     LaunchedEffect(binder, mediaId) {
         val currentBinder = binder ?: return@LaunchedEffect
@@ -80,32 +117,7 @@ fun StatsForNerds(
             .distinctUntilChanged()
             .collectLatest { currentFormat ->
                 if (currentFormat?.itag != null) format = currentFormat
-                else currentBinder.player.currentMediaItem
-                    ?.takeIf { it.mediaId == mediaId }
-                    ?.let { mediaItem ->
-                        withContext(Dispatchers.IO) {
-                            delay(2000)
-
-                            Innertube
-                                .player(PlayerBody(videoId = mediaId))
-                                ?.onSuccess { response ->
-                                    response.streamingData?.highestQualityFormat?.let { format ->
-                                        Database.insert(mediaItem)
-                                        Database.insert(
-                                            Format(
-                                                songId = mediaId,
-                                                itag = format.itag,
-                                                mimeType = format.mimeType,
-                                                bitrate = format.bitrate,
-                                                loudnessDb = response.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                                contentLength = format.contentLength,
-                                                lastModified = format.lastModified
-                                            )
-                                        )
-                                    }
-                                }
-                        }
-                    }
+                else reload(currentBinder)
             }
     }
 
@@ -131,19 +143,19 @@ fun StatsForNerds(
         }
     }
 
-    Box(
+    Column(
         modifier = modifier
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { onDismiss() })
             }
             .background(colorPalette.overlay)
-            .fillMaxSize()
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(all = 16.dp)
+            modifier = Modifier.padding(all = 16.dp)
         ) {
             @Composable
             fun Text(text: String) = BasicText(
@@ -194,6 +206,20 @@ fun StatsForNerds(
                     } ?: stringResource(R.string.unknown)
                 )
             }
+        }
+
+        binder?.let {
+            SecondaryTextButton(
+                text = stringResource(R.string.reload),
+                onClick = {
+                    hasReloaded = true
+
+                    coroutineScope.launch {
+                        reload(it)
+                    }
+                },
+                enabled = !hasReloaded
+            )
         }
     }
 }
