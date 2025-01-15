@@ -5,6 +5,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.vitune.core.ui.LocalAppearance
+import app.vitune.core.ui.surface
 
 @Composable
 fun Slider(
@@ -27,7 +28,9 @@ fun Slider(
         colors = SliderDefaults.colors(
             thumbColor = colorPalette.onAccent,
             activeTrackColor = colorPalette.accent,
-            inactiveTrackColor = colorPalette.text.copy(alpha = 0.75f)
+            inactiveTrackColor = colorPalette.surface.copy(alpha = 0.75f),
+            activeTickColor = colorPalette.surface,
+            inactiveTickColor = colorPalette.accent
         )
     )
 }

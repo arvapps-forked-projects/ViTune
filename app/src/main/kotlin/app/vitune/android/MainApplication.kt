@@ -343,8 +343,10 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                         }
 
                         reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED &&
-                                mediaItem.mediaMetadata.extras?.songBundle?.isFromPersistentQueue != true
-                            -> playerBottomSheetState.expandSoft()
+                                mediaItem.mediaMetadata.extras?.songBundle?.isFromPersistentQueue != true -> {
+                            if (AppearancePreferences.openPlayer) playerBottomSheetState.expandSoft()
+                            else Unit
+                        }
 
                         playerBottomSheetState.dismissed -> playerBottomSheetState.collapseSoft()
 
@@ -395,7 +397,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
 
                     @Suppress("deprecation")
                     MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE
-                    -> extras.playlist
+                        -> extras.playlist
 
                     else -> null
                 }
