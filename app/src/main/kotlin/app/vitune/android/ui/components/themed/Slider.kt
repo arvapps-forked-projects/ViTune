@@ -4,6 +4,7 @@ import androidx.annotation.IntRange
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.surface
 
@@ -14,7 +15,8 @@ fun Slider(
     onSlideComplete: () -> Unit,
     range: ClosedFloatingPointRange<Float>,
     modifier: Modifier = Modifier,
-    @IntRange(from = 0) steps: Int = 0
+    @IntRange(from = 0) steps: Int = 0,
+    showTicks: Boolean = steps != 0
 ) {
     val (colorPalette) = LocalAppearance.current
 
@@ -29,8 +31,8 @@ fun Slider(
             thumbColor = colorPalette.onAccent,
             activeTrackColor = colorPalette.accent,
             inactiveTrackColor = colorPalette.surface.copy(alpha = 0.75f),
-            activeTickColor = colorPalette.surface,
-            inactiveTickColor = colorPalette.accent
+            activeTickColor = if (showTicks) colorPalette.surface else Color.Transparent,
+            inactiveTickColor = if (showTicks) colorPalette.accent else Color.Transparent
         )
     )
 }
