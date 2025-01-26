@@ -21,10 +21,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -125,7 +123,9 @@ fun HomePlaylists(
                 .only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
                 .asPaddingValues(),
             horizontalArrangement = Arrangement.spacedBy(Dimensions.items.alternativePadding),
-            verticalArrangement = Arrangement.spacedBy(Dimensions.items.alternativePadding),
+            verticalArrangement =
+                if (UIStatePreferences.playlistsAsGrid) Arrangement.spacedBy(Dimensions.items.alternativePadding)
+                else Arrangement.Top,
             modifier = Modifier
                 .fillMaxSize()
                 .background(colorPalette.background0)

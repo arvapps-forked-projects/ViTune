@@ -188,7 +188,7 @@ fun PlaylistItem(
     modifier = Modifier.clip(
         (
                 LocalAppearance.current.thumbnailShapeCorners +
-                        if (alternative) Dimensions.items.alternativePadding else 0.dp
+                        if (alternative) Dimensions.items.alternativePadding else Dimensions.items.horizontalPadding
                 ).roundedShape
     ) then modifier
 ) { centeredModifier ->
