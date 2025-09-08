@@ -1,11 +1,14 @@
 package app.vitune.android.ui.screens.player
 
+import android.content.ClipData
+import android.content.ClipDescription
 import android.text.format.Formatter
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,6 +29,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -69,6 +75,7 @@ fun StatsForNerds(
     val (colorPalette, typography) = LocalAppearance.current
     val context = LocalContext.current
     val binder = LocalPlayerServiceBinder.current
+    val clipboardManager = LocalClipboard.current
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -158,10 +165,14 @@ fun StatsForNerds(
             modifier = Modifier.padding(all = 16.dp)
         ) {
             @Composable
-            fun Text(text: String) = BasicText(
+            fun Text(
+                text: String,
+                modifier: Modifier = Modifier
+            ) = BasicText(
                 text = text,
                 maxLines = 1,
-                style = typography.xs.medium.color(colorPalette.onOverlay)
+                style = typography.xs.medium.color(colorPalette.onOverlay),
+                modifier = modifier
             )
 
             Column(horizontalAlignment = Alignment.End) {
@@ -174,7 +185,14 @@ fun StatsForNerds(
             }
 
             Column {
-                Text(text = mediaId)
+                Text(
+                    text = mediaId,
+                    modifier = Modifier.clickable {
+                        coroutineScope.launch {
+                            clipboardManager.setText(mediaId)
+                        }
+                    }
+                )
                 Text(text = format?.itag?.toString() ?: stringResource(R.string.unknown))
                 Text(
                     text = when (val rate = format?.bitrate) {
@@ -223,3 +241,19 @@ fun StatsForNerds(
         }
     }
 }
+
+suspend fun Clipboard.setText(
+    text: String,
+    description: String? = null,
+    mimeTypes: List<String> = listOf("text/plain")
+) = setClipEntry(
+    ClipEntry(
+        ClipData(
+            /* description = */ ClipDescription(
+                /* label = */ description ?: text,
+                /* mimeTypes = */ mimeTypes.toTypedArray()
+            ),
+            /* item = */ ClipData.Item(text)
+        )
+    )
+)
