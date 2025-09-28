@@ -87,44 +87,12 @@ fun StatsForNerds(
 
     var hasReloaded by rememberSaveable { mutableStateOf(false) }
 
-    suspend fun reload(binder: PlayerService.Binder) {
-        binder.player.currentMediaItem
-            ?.takeIf { it.mediaId == mediaId }
-            ?.let { mediaItem ->
-                withContext(Dispatchers.IO) {
-                    delay(2000)
-
-                    Innertube
-                        .player(PlayerBody(videoId = mediaId))
-                        ?.onSuccess { response ->
-                            response?.streamingData?.highestQualityFormat?.let { format ->
-                                Database.insert(mediaItem)
-                                Database.insert(
-                                    Format(
-                                        songId = mediaId,
-                                        itag = format.itag,
-                                        mimeType = format.mimeType,
-                                        bitrate = format.bitrate,
-                                        loudnessDb = response.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                        contentLength = format.contentLength,
-                                        lastModified = format.lastModified
-                                    )
-                                )
-                            }
-                        }
-                }
-            }
-    }
-
-    LaunchedEffect(binder, mediaId) {
-        val currentBinder = binder ?: return@LaunchedEffect
-
+    LaunchedEffect(mediaId) {
         Database
             .format(mediaId)
             .distinctUntilChanged()
             .collectLatest { currentFormat ->
                 if (currentFormat?.itag != null) format = currentFormat
-                else reload(currentBinder)
             }
     }
 
@@ -224,20 +192,6 @@ fun StatsForNerds(
                     } ?: stringResource(R.string.unknown)
                 )
             }
-        }
-
-        binder?.let {
-            SecondaryTextButton(
-                text = stringResource(R.string.reload),
-                onClick = {
-                    hasReloaded = true
-
-                    coroutineScope.launch {
-                        reload(it)
-                    }
-                },
-                enabled = !hasReloaded
-            )
         }
     }
 }

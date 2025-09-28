@@ -130,6 +130,8 @@ import app.vitune.providers.sponsorblock.SponsorBlock
 import app.vitune.providers.sponsorblock.models.Action
 import app.vitune.providers.sponsorblock.models.Category
 import app.vitune.providers.sponsorblock.requests.segments
+import com.yausername.youtubedl_android.YoutubeDL
+import com.yausername.youtubedl_android.YoutubeDLRequest
 import io.ktor.client.plugins.ClientRequestException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -763,7 +765,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
                             // Wait for next segment
                             if (nextSegment.start.inWholeMilliseconds > posMillis()) {
-                                val timeNextSegment = nextSegment.start.inWholeMilliseconds - posMillis()
+                                val timeNextSegment =
+                                    nextSegment.start.inWholeMilliseconds - posMillis()
                                 val speed = speed().toDouble()
                                 delay((timeNextSegment / speed).milliseconds)
                             }
@@ -1374,120 +1377,56 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             } ?: run {
                 val body = runBlocking(Dispatchers.IO) {
                     Innertube.player(PlayerBody(videoId = mediaId))
-                }?.getOrThrow()
+                }?.getOrNull()
+                val youtubeFormat = body?.streamingData?.highestQualityFormat
 
-                if (body?.videoDetails?.videoId != mediaId) throw VideoIdMismatchException()
-
-                body.reason?.let { Log.w(TAG, it) }
-                val format = body.streamingData?.highestQualityFormat
-                    ?: throw PlayableFormatNotFoundException()
-                val url = when (val status = body.playabilityStatus?.status) {
-                    "OK" -> {
-                        val mediaItem = runCatching {
-                            runBlocking(Dispatchers.IO) { findMediaItem(mediaId) }
-                        }.getOrNull()
-                        val extras = mediaItem?.mediaMetadata?.extras?.songBundle
-
-                        if (extras?.durationText == null) format.approxDurationMs
-                            ?.div(1000)
-                            ?.let(DateUtils::formatElapsedTime)
-                            ?.removePrefix("0")
-                            ?.let { durationText ->
-                                extras?.durationText = durationText
-                                Database.updateDurationText(mediaId, durationText)
-                            }
-
-                        transaction {
-                            runCatching {
-                                mediaItem?.let(Database::insert)
-
-                                Database.insert(
-                                    Format(
-                                        songId = mediaId,
-                                        itag = format.itag,
-                                        mimeType = format.mimeType,
-                                        bitrate = format.bitrate,
-                                        loudnessDb = body.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                        contentLength = format.contentLength,
-                                        lastModified = format.lastModified
-                                    )
-                                )
-                            }
-                        }
-
-                        runCatching {
-                            runBlocking(Dispatchers.IO) {
-                                body.context?.let { format.findUrl(it) }
-                            }
-                        }.getOrElse {
-                            throw RestrictedVideoException(it)
-                        }
-                    }
-
-                    "UNPLAYABLE" -> throw UnplayableException()
-                    "LOGIN_REQUIRED" -> throw LoginRequiredException()
-
-                    else -> throw PlaybackException(
-                        /* message = */ status,
-                        /* cause = */ null,
-                        /* errorCode = */ PlaybackException.ERROR_CODE_REMOTE_ERROR
+                val info = runCatching {
+                    YoutubeDL.getInfo(
+                        YoutubeDLRequest("https://music.youtube.com/watch?v=${mediaId}")
+                            .addOption("-f", "ba")
+                            .addOption("-x")
                     )
-                } ?: throw UnplayableException()
+                }.getOrNull()
+                if (info?.id != mediaId) throw VideoIdMismatchException()
+                val format = info.formats?.firstOrNull { it.formatId == info.formatId }
 
-                val uri = url.toUri().let {
-                    if (body.cpn == null) it
-                    else it
-                        .buildUpon()
-                        .appendQueryParameter("cpn", body.cpn)
-                        .build()
+                val uri =
+                    runCatching { info.url?.toUri() }.getOrNull() ?: throw UnplayableException()
+
+                val mediaItem = runCatching {
+                    runBlocking(Dispatchers.IO) { findMediaItem(mediaId) }
+                }.getOrNull()
+
+                transaction {
+                    runCatching {
+                        mediaItem?.let(Database::insert)
+                        Database.insert(
+                            Format(
+                                songId = mediaId,
+                                itag = info.formatId?.toIntOrNull(),
+                                mimeType = youtubeFormat?.mimeType,
+                                bitrate = format?.abr?.let { it * 1000 }?.toLong(),
+                                loudnessDb = body?.playerConfig?.audioConfig?.normalizedLoudnessDb,
+                                contentLength = info.fileSize,
+                                lastModified = youtubeFormat?.lastModified
+                            )
+                        )
+                    }
                 }
 
                 uriCache.push(
                     key = mediaId,
-                    meta = format.contentLength,
+                    meta = info.fileSize,
                     uri = uri,
-                    validUntil = body.streamingData?.expiresInSeconds?.seconds?.let { Clock.System.now() + it }
+                    validUntil = null
                 )
 
                 dataSpec
                     .withUri(uri)
-                    .ranged(format.contentLength)
+                    .ranged(info.fileSize)
             }
+        }.handleUnknownErrors {
+            uriCache.clear()
         }
-            .handleUnknownErrors {
-                uriCache.clear()
-            }
-            .retryIf<UnplayableException>(
-                maxRetries = 3,
-                printStackTrace = true
-            )
-            .retryIf(
-                maxRetries = 1,
-                printStackTrace = true
-            ) { ex ->
-                ex.findCause<InvalidResponseCodeException>()?.responseCode == 403 ||
-                    ex.findCause<ClientRequestException>()?.response?.status?.value == 403 ||
-                    ex.findCause<InvalidHttpCodeException>() != null
-            }
-            .handleRangeErrors()
-            .withFallback(context) { dataSpec ->
-                val id = dataSpec.key ?: error("No id found for resolving an alternative song")
-                val alternativeSong = runBlocking {
-                    Database
-                        .localSongsByRowIdDesc()
-                        .first()
-                        .find { id in it.title }
-                } ?: error("No alternative song found")
-
-                dataSpec.buildUpon()
-                    .setKey(alternativeSong.id)
-                    .setUri(
-                        ContentUris.withAppendedId(
-                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                            alternativeSong.id.substringAfter(LOCAL_KEY_PREFIX).toLong()
-                        )
-                    )
-                    .build()
-            }
     }
 }

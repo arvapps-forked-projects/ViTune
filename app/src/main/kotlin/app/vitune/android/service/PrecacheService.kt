@@ -49,6 +49,7 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration.Companion.milliseconds
+import androidx.core.net.toUri
 
 private val executor = Executors.newCachedThreadPool()
 private val coroutineScope = CoroutineScope(
@@ -247,7 +248,7 @@ class PrecacheService : DownloadService(
                 .Builder(
                     /* id      = */ mediaItem.mediaId,
                     /* uri     = */ mediaItem.requestMetadata.mediaUri
-                        ?: Uri.parse("https://youtube.com/watch?v=${mediaItem.mediaId}")
+                        ?: "https://youtube.com/watch?v=${mediaItem.mediaId}".toUri()
                 )
                 .setCustomCacheKey(mediaItem.mediaId)
                 .setData(mediaItem.mediaId.encodeToByteArray())

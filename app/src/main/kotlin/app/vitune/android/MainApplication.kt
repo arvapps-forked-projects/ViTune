@@ -127,6 +127,8 @@ import com.kieronquinn.monetcompat.core.MonetActivityAccessException
 import com.kieronquinn.monetcompat.core.MonetCompat
 import com.kieronquinn.monetcompat.interfaces.MonetColorsChangedListener
 import com.valentinilk.shimmer.LocalShimmerTheme
+import com.yausername.ffmpeg.FFmpeg
+import com.yausername.youtubedl_android.YoutubeDL
 import dev.kdrag0n.monet.theme.ColorScheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -560,6 +562,8 @@ object Dependencies {
     internal fun init(application: MainApplication) {
         this.application = application
         DatabaseInitializer()
+        YoutubeDL.init(application)
+        FFmpeg.init(application)
     }
 }
 
