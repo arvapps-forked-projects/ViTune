@@ -2,7 +2,6 @@ package app.vitune.android.service
 
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
-import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -20,9 +19,7 @@ import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.SystemClock
-import android.provider.MediaStore
 import android.support.v4.media.session.MediaSessionCompat
-import android.text.format.DateUtils
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -40,7 +37,6 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.audio.SonicAudioProcessor
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSource
@@ -65,6 +61,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import androidx.media3.extractor.DefaultExtractorsFactory
 import app.vitune.android.Database
+import app.vitune.android.Dependencies
 import app.vitune.android.MainActivity
 import app.vitune.android.R
 import app.vitune.android.models.Event
@@ -82,6 +79,7 @@ import app.vitune.android.utils.ConditionalCacheDataSourceFactory
 import app.vitune.android.utils.GlyphInterface
 import app.vitune.android.utils.InvincibleService
 import app.vitune.android.utils.TimerJob
+import app.vitune.android.utils.YouTubeDLResponse
 import app.vitune.android.utils.YouTubeRadio
 import app.vitune.android.utils.activityPendingIntent
 import app.vitune.android.utils.asDataSource
@@ -93,19 +91,16 @@ import app.vitune.android.utils.forcePlayFromBeginning
 import app.vitune.android.utils.forceSeekToNext
 import app.vitune.android.utils.forceSeekToPrevious
 import app.vitune.android.utils.get
-import app.vitune.android.utils.handleRangeErrors
 import app.vitune.android.utils.handleUnknownErrors
 import app.vitune.android.utils.intent
 import app.vitune.android.utils.mediaItems
 import app.vitune.android.utils.progress
 import app.vitune.android.utils.readOnlyWhen
-import app.vitune.android.utils.retryIf
 import app.vitune.android.utils.setPlaybackPitch
 import app.vitune.android.utils.shouldBePlaying
 import app.vitune.android.utils.thumbnail
 import app.vitune.android.utils.timer
 import app.vitune.android.utils.toast
-import app.vitune.android.utils.withFallback
 import app.vitune.compose.preferences.SharedPreferencesProperty
 import app.vitune.core.data.enums.ExoPlayerDiskCacheSize
 import app.vitune.core.data.utils.UriCache
@@ -119,7 +114,6 @@ import app.vitune.core.ui.utils.isAtLeastAndroid9
 import app.vitune.core.ui.utils.songBundle
 import app.vitune.core.ui.utils.streamVolumeFlow
 import app.vitune.providers.innertube.Innertube
-import app.vitune.providers.innertube.InvalidHttpCodeException
 import app.vitune.providers.innertube.models.NavigationEndpoint
 import app.vitune.providers.innertube.models.bodies.PlayerBody
 import app.vitune.providers.innertube.models.bodies.SearchBody
@@ -130,9 +124,6 @@ import app.vitune.providers.sponsorblock.SponsorBlock
 import app.vitune.providers.sponsorblock.models.Action
 import app.vitune.providers.sponsorblock.models.Category
 import app.vitune.providers.sponsorblock.requests.segments
-import com.yausername.youtubedl_android.YoutubeDL
-import com.yausername.youtubedl_android.YoutubeDLRequest
-import io.ktor.client.plugins.ClientRequestException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -150,7 +141,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -166,11 +156,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
-import kotlinx.datetime.Clock
 import java.io.IOException
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import android.os.Binder as AndroidBinder
 
 const val LOCAL_KEY_PREFIX = "local:"
@@ -1381,12 +1369,10 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 val youtubeFormat = body?.streamingData?.highestQualityFormat
 
                 val info = runCatching {
-                    YoutubeDL.getInfo(
-                        YoutubeDLRequest("https://music.youtube.com/watch?v=${mediaId}")
-                            .addOption("-f", "ba")
-                            .addOption("-x")
-                    )
-                }.getOrNull()
+                    Dependencies.runDownload(mediaId)
+                }.mapCatching {
+                    YouTubeDLResponse.fromString(it)
+                }.also { it.exceptionOrNull()?.printStackTrace() }.getOrNull()
                 if (info?.id != mediaId) throw VideoIdMismatchException()
                 val format = info.formats?.firstOrNull { it.formatId == info.formatId }
 

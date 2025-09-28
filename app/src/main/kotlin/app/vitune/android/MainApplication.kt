@@ -123,12 +123,12 @@ import coil3.disk.directory
 import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import coil3.util.DebugLogger
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
 import com.kieronquinn.monetcompat.core.MonetActivityAccessException
 import com.kieronquinn.monetcompat.core.MonetCompat
 import com.kieronquinn.monetcompat.interfaces.MonetColorsChangedListener
 import com.valentinilk.shimmer.LocalShimmerTheme
-import com.yausername.ffmpeg.FFmpeg
-import com.yausername.youtubedl_android.YoutubeDL
 import dev.kdrag0n.monet.theme.ColorScheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -557,13 +557,21 @@ object Dependencies {
     lateinit var application: MainApplication
         private set
 
+    val py by lazy {
+        if (!Python.isStarted()) Python.start(AndroidPlatform(application))
+        Python.getInstance()
+    }
+
+    fun runDownload(id: String, py: Python = this.py) = py
+        .getModule("download")
+        .callAttr("download", id)
+        .toString()
+
     val credentialManager by lazy { CredentialManager.create(application) }
 
     internal fun init(application: MainApplication) {
         this.application = application
         DatabaseInitializer()
-        YoutubeDL.init(application)
-        FFmpeg.init(application)
     }
 }
 

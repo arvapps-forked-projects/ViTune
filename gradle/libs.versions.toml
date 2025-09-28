@@ -12,7 +12,6 @@ detekt = "1.23.8"
 workmanager = "2.10.1"
 credentials = "1.5.0"
 coil = "3.1.0"
-ytdlp = "0.17.4"
 
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
@@ -25,6 +24,7 @@ kotlin_compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin_parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+chaquo = { id = "com.chaquo.python", version = "16.1.0" }
 
 [libraries]
 core_ktx = { module = "androidx.core:core-ktx", version = "1.16.0" }
@@ -81,9 +81,6 @@ logback = { module = "com.github.tony19:logback-android", version = "3.0.0" }
 brotli = { module = "org.brotli:dec", version = "0.1.2" }
 palette = { module = "androidx.palette:palette", version = "1.0.0" }
 monet = { module = "com.github.KieronQuinn:MonetCompat", version = "0.4.1" }
-
-ytdlp = { module = "io.github.junkfood02.youtubedl-android:library", version.ref = "ytdlp" }
-ytdlp_ffmpeg = { module = "io.github.junkfood02.youtubedl-android:ffmpeg", version.ref = "ytdlp" }
 
 desugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 

@@ -6,7 +6,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.chaquo)
 }
 
 android {
@@ -25,6 +27,10 @@ android {
         versionName = project.version.toString()
 
         multiDexEnabled = true
+
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
     }
 
     splits {
@@ -121,6 +127,15 @@ composeCompiler {
     }
 }
 
+chaquopy {
+    defaultConfig {
+        version = "3.13"
+        pip {
+            install("yt-dlp")
+        }
+    }
+}
+
 dependencies {
     coreLibraryDesugaring(libs.desugaring)
 
@@ -146,9 +161,6 @@ dependencies {
     implementation(libs.palette)
     implementation(libs.monet)
     runtimeOnly(projects.core.materialCompat)
-
-    implementation(libs.ytdlp)
-    implementation(libs.ytdlp.ffmpeg)
 
     implementation(libs.exoplayer)
     implementation(libs.exoplayer.workmanager)
