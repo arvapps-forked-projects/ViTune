@@ -562,10 +562,19 @@ object Dependencies {
         Python.getInstance()
     }
 
-    fun runDownload(id: String, py: Python = this.py) = py
-        .getModule("download")
+    private val module by lazy { py.getModule("download") }
+
+    fun runDownload(id: String) = module
         .callAttr("download", id)
         .toString()
+
+    fun upgradeYoutubeDl(packageName: String = "yt-dlp"): Boolean {
+        val success = runCatching { module.callAttr("upgrade", packageName) }
+            .also { it.exceptionOrNull()?.printStackTrace() }
+            .isSuccess
+        if (!success) Log.e("Python", "Upgrading $packageName resulted in non-zero exit code!")
+        return success
+    }
 
     val credentialManager by lazy { CredentialManager.create(application) }
 
