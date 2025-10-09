@@ -286,7 +286,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             },
             getColor = { isSystemInDarkMode ->
                 if (isSystemInDarkMode) Color.BLACK else Color.WHITE
-            }
+            },
+            context = this
         )
 
         cache = createCache(this)
@@ -1403,8 +1404,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 uriCache.push(
                     key = mediaId,
                     meta = info.fileSize,
-                    uri = uri,
-                    validUntil = null
+                    uri = uri
                 )
 
                 dataSpec

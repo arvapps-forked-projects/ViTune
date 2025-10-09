@@ -18,7 +18,7 @@ data class JavaScriptChallenge(
         cache.getOrPut(cipher) {
             with(Context.enter()) {
                 languageVersion = Context.VERSION_ES6
-                optimizationLevel = -1
+                isInterpretedMode = true
                 val scope = initSafeStandardObjects()
                 scope.defineProperty(
                     "document",

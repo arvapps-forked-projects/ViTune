@@ -336,7 +336,6 @@ interface Database {
     @Query("SELECT * FROM Playlist WHERE id = :id")
     fun playlist(id: Long): Flow<Playlist?>
 
-    // TODO: apparently this is an edge-case now?
     @RewriteQueriesToDropUnusedColumns
     @Transaction
     @Query(
@@ -347,7 +346,7 @@ interface Database {
         ORDER BY SortedSongPlaylistMap.position
         """
     )
-    fun playlistSongs(id: Long): Flow<List<Song>?>
+    fun playlistSongs(id: Long): Flow<List<Song>>
 
     @Transaction
     @Query("SELECT * FROM Playlist WHERE id = :id")
@@ -436,7 +435,7 @@ interface Database {
         LIMIT 4
         """
     )
-    fun playlistThumbnailUrls(id: Long): Flow<List<String?>>
+    fun playlistThumbnailUrls(id: Long): Flow<List<String>>
 
     @Transaction
     @Query(
@@ -1126,5 +1125,5 @@ fun transaction(block: () -> Unit) = with(DatabaseInitializer.instance) {
     }
 }
 
-val RoomDatabase.path: String?
+val RoomDatabase.internalPath: String?
     get() = openHelper.writableDatabase.path

@@ -29,7 +29,7 @@ abstract class NotificationChannels {
     @OptIn(UnstableApi::class)
     inner class Channel internal constructor(
         val id: String,
-        @StringRes
+        @param:StringRes
         val description: Int,
         val notificationId: Int? = null,
         val importance: @Importance Int,

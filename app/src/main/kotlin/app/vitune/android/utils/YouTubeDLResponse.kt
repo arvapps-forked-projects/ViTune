@@ -8,7 +8,7 @@ import kotlinx.serialization.json.Json
 data class YouTubeDLResponse(
     val id: String,
     @SerialName("format_id")
-    val formatId: String,
+    val formatId: String? = null,
     val url: String? = null,
     val formats: List<Format>? = null,
     @SerialName("filesize")
