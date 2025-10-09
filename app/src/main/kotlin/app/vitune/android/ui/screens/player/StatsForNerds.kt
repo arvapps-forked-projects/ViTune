@@ -24,7 +24,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,22 +41,14 @@ import app.vitune.android.Database
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.models.Format
-import app.vitune.android.service.PlayerService
-import app.vitune.android.ui.components.themed.SecondaryTextButton
 import app.vitune.android.utils.color
 import app.vitune.android.utils.medium
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.onOverlay
 import app.vitune.core.ui.overlay
-import app.vitune.providers.innertube.Innertube
-import app.vitune.providers.innertube.models.bodies.PlayerBody
-import app.vitune.providers.innertube.requests.player
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @OptIn(UnstableApi::class)
@@ -84,8 +75,6 @@ fun StatsForNerds(
     }
 
     var format by remember { mutableStateOf<Format?>(null) }
-
-    var hasReloaded by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(mediaId) {
         Database

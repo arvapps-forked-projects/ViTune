@@ -28,9 +28,9 @@ import kotlinx.datetime.toInstant
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.WriteWith
-import kotlin.time.Instant
 import java.io.IOException
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 private val logcatDateTimeFormat = LocalDateTime.Format {
     date(

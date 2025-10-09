@@ -3,10 +3,10 @@ package app.vitune.android.service
 import android.content.ComponentName
 import android.content.Context
 import android.content.ServiceConnection
-import android.net.Uri
 import android.os.IBinder
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.cache.Cache
@@ -49,7 +49,6 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration.Companion.milliseconds
-import androidx.core.net.toUri
 
 private val executor = Executors.newCachedThreadPool()
 private val coroutineScope = CoroutineScope(
