@@ -20,6 +20,7 @@ import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.SystemClock
 import android.support.v4.media.session.MediaSessionCompat
+import android.text.format.DateUtils
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -1384,6 +1385,19 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 val mediaItem = runCatching {
                     runBlocking(Dispatchers.IO) { findMediaItem(mediaId) }
                 }.getOrNull()
+
+                val extras = mediaItem?.mediaMetadata?.extras?.songBundle
+                if (extras?.durationText == null) body
+                    ?.streamingData
+                    ?.highestQualityFormat
+                    ?.approxDurationMs
+                    ?.div(1000)
+                    ?.let(DateUtils::formatElapsedTime)
+                    ?.removePrefix("0")
+                    ?.let { durationText ->
+                        extras?.durationText = durationText
+                        Database.updateDurationText(mediaId, durationText)
+                    }
 
                 transaction {
                     runCatching {
