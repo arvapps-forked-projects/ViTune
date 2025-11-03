@@ -172,18 +172,22 @@ fun Queue(
 
     LaunchedEffect(mediaItemIndex, shouldLoadSuggestions) {
         // TODO: I hate all of this
-        val newMediaId = windows[mediaItemIndex].mediaItem.mediaId
-        if (previousMediaId == newMediaId && suggestions?.getOrNull()?.isNotEmpty() == true) return@LaunchedEffect
-        previousMediaId = newMediaId
+        runCatching {
+            val newMediaId = windows[mediaItemIndex].mediaItem.mediaId
+            if (previousMediaId == newMediaId && suggestions?.getOrNull()
+                    ?.isNotEmpty() == true
+            ) return@LaunchedEffect
+            previousMediaId = newMediaId
 
-        if (shouldLoadSuggestions) withContext(Dispatchers.IO) {
-            suggestions = runCatching {
-                Innertube.nextPage(
-                    NextBody(videoId = newMediaId)
-                )?.mapCatching { page ->
-                    page.itemsPage?.items?.map { it.asMediaItem }
-                }
-            }.also { it.exceptionOrNull()?.printStackTrace() }.getOrNull()
+            if (shouldLoadSuggestions) withContext(Dispatchers.IO) {
+                suggestions = runCatching {
+                    Innertube.nextPage(
+                        NextBody(videoId = newMediaId)
+                    )?.mapCatching { page ->
+                        page.itemsPage?.items?.map { it.asMediaItem }
+                    }
+                }.also { it.exceptionOrNull()?.printStackTrace() }.getOrNull()
+            }
         }
     }
 

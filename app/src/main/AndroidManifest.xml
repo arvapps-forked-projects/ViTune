@@ -55,7 +55,6 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.ViTune.NoActionBar"
         android:appCategory="audio"
-        android:extractNativeLibs="true"
         tools:ignore="UnusedAttribute">
 
         <activity

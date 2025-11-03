@@ -11,3 +11,6 @@ build
 local.properties
 
 .kotlin
+
+.quickjs_cache/
+jniLibs/

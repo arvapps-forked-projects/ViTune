@@ -17,6 +17,10 @@ android {
     namespace = appId
     compileSdk = 36
 
+    val abis = listOf("arm64-v8a", "x86_64")
+    val cmakeVersion = "4.1.1"
+    ndkVersion = "29.0.14206865"
+
     defaultConfig {
         applicationId = appId
 
@@ -29,14 +33,23 @@ android {
         multiDexEnabled = true
 
         ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
+            //noinspection ChromeOsAbiSupport
+            abiFilters += abis
+        }
+
+        @Suppress("UnstableApiUsage")
+        externalNativeBuild {
+            cmake {
+                arguments += listOf("-DANDROID_STL=c++_static")
+            }
         }
     }
 
     splits {
         abi {
+            isEnable = true
             reset()
-            isUniversalApk = true
+            isUniversalApk = false
         }
     }
 
@@ -88,11 +101,47 @@ android {
 
     packaging {
         resources.excludes.add("META-INF/**/*")
+        jniLibs.useLegacyPackaging = true
     }
 
     androidResources {
         @Suppress("UnstableApiUsage")
         generateLocaleConfig = true
+    }
+
+    externalNativeBuild {
+        cmake {
+            version = cmakeVersion
+            path = file("src/main/cpp/CMakeLists.txt")
+        }
+    }
+}
+
+afterEvaluate {
+    val jniLibs = file("${layout.projectDirectory}/src/main/jniLibs").also { it.mkdirs() }
+    android.buildTypes.forEach { type ->
+        val typeCapitalized = type.name.let {
+            it.first().uppercase() + it.substring(1)
+        }
+
+        tasks.named("assemble${typeCapitalized}").configure {
+            doFirst {
+                val cxxDir =
+                    file("${layout.buildDirectory.get()}/intermediates/cxx/${if (typeCapitalized == "Debug") "Debug" else "RelWithDebInfo"}")
+
+                cxxDir.walkTopDown().forEach cxx@{ f ->
+                    if (f.name != "qjs") return@cxx
+
+                    f.copyTo(
+                        target = jniLibs
+                            .resolve(f.parentFile.name)
+                            .also { it.mkdirs() }
+                            .resolve("libqjs.so"), // disguise because fuck you
+                        overwrite = true
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -126,7 +175,8 @@ chaquopy {
     defaultConfig {
         version = "3.13"
         pip {
-            install("yt-dlp")
+            install("yt-dlp==2025.11.1.232827.dev0")
+            install("yt-dlp-ejs")
             install("pip")
         }
     }

@@ -29,12 +29,7 @@ private suspend fun Innertube.tryContexts(
                 setBody(
                     body.copy(
                         context = context,
-                        cpn = cpn,
-                        playbackContext = PlayerBody.PlaybackContext(
-                            contentPlaybackContext = PlayerBody.PlaybackContext.ContentPlaybackContext(
-                                signatureTimestamp = getSignatureTimestamp(context)
-                            )
-                        )
+                        cpn = cpn
                     )
                 )
 

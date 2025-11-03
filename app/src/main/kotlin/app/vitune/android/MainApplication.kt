@@ -136,6 +136,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 private const val TAG = "MainActivity"
 private val coroutineScope = CoroutineScope(Dispatchers.IO)
@@ -564,8 +565,13 @@ object Dependencies {
 
     private val module by lazy { py.getModule("download") }
 
-    fun runDownload(id: String) = module
-        .callAttr("download", id)
+    val quickjsPath by lazy {
+        File(application.applicationInfo.nativeLibraryDir, "libqjs.so")
+            .also { if (!it.canExecute()) it.setExecutable(true) }
+    }
+
+    fun runDownload(id: String): String = module
+        .callAttr("download", quickjsPath.absolutePath, id)
         .toString()
 
     fun upgradeYoutubeDl(packageName: String = "yt-dlp"): Boolean {
