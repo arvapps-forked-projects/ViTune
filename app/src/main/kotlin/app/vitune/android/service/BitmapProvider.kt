@@ -62,7 +62,6 @@ class BitmapProvider(
         return lastBitmap == null
     }
 
-    context(Context)
     fun load(
         uri: Uri?,
         onDone: (Bitmap) -> Unit = { }
@@ -81,8 +80,8 @@ class BitmapProvider(
         }
 
         val oldTask = currentTask
-        currentTask = applicationContext.imageLoader.enqueue(
-            ImageRequest.Builder(applicationContext)
+        currentTask = context.applicationContext.imageLoader.enqueue(
+            ImageRequest.Builder(context.applicationContext)
                 .data(uri.thumbnail(getBitmapSize()))
                 .allowHardware(false)
                 .listener(

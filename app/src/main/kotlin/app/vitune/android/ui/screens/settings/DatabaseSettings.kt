@@ -1,5 +1,6 @@
 package app.vitune.android.ui.screens.settings
 
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,6 +30,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.system.exitProcess
 
+@SuppressLint("RestrictedApi")
 @Route
 @Composable
 fun DatabaseSettings() = with(DataPreferences) {
@@ -63,14 +65,17 @@ fun DatabaseSettings() = with(DataPreferences) {
             Database.checkpoint()
             Database.internal.close()
 
-            context.applicationContext.contentResolver.openInputStream(uri)
-                ?.use { inputStream ->
-                    FileOutputStream(Database.internal.path).use { outputStream ->
-                        inputStream.copyTo(outputStream)
+            with(context) {
+                applicationContext.contentResolver.openInputStream(uri)
+                    ?.use { inputStream ->
+                        FileOutputStream(Database.internal.path).use { outputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
                     }
-                }
 
-            context.stopService(context.intent<PlayerService>())
+                stopService(intent<PlayerService>())
+            }
+
             exitProcess(0)
         }
     }

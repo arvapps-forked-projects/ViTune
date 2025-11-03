@@ -443,7 +443,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
     }
 }
 
-context(Context)
+context(context: Context)
 @Suppress("CyclomaticComplexMethod")
 fun handleUrl(
     uri: Uri,
@@ -469,7 +469,7 @@ fun handleUrl(
                         page.songsPage?.items?.firstOrNull()?.album?.endpoint?.browseId
                             ?.let { albumRoute.ensureGlobal(it) }
                     } ?: withContext(Dispatchers.Main) {
-                    toast(getString(R.string.error_url, uri))
+                    context.toast(context.getString(R.string.error_url, uri))
                 }
                 else playlistRoute.ensureGlobal(
                     p0 = browseId,
@@ -488,7 +488,7 @@ fun handleUrl(
                 uri.host == "youtu.be" -> path
                 else -> {
                     withContext(Dispatchers.Main) {
-                        toast(getString(R.string.error_url, uri))
+                        context.toast(context.getString(R.string.error_url, uri))
                     }
                     null
                 }
@@ -520,11 +520,11 @@ class MainApplication : Application(), SingletonImageLoader.Factory, Configurati
                 .penaltyDeath()
                 .build()
         )
+        Dependencies.init(this)
 
         MonetCompat.debugLog = BuildConfig.DEBUG
         super.onCreate()
 
-        Dependencies.init(this)
         MonetCompat.enablePaletteCompat()
         ServiceNotifications.createAll()
     }
@@ -580,7 +580,6 @@ object Dependencies {
 
     internal fun init(application: MainApplication) {
         this.application = application
-        DatabaseInitializer()
     }
 }
 

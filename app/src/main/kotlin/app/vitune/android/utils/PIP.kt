@@ -177,7 +177,7 @@ fun Pip(
 
     DisposableEffect(context, actions) {
         val currentActions = actions ?: return@DisposableEffect onDispose { }
-        currentActions.register(context)
+        with(context) { currentActions.register() }
         onDispose {
             context.unregisterReceiver(currentActions)
             activity.setAutoEnterPip(false)

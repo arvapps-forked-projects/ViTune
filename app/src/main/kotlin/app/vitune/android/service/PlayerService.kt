@@ -1295,8 +1295,9 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     class NotificationDismissReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            context.stopService(context.intent<PlayerService>())
+        override fun onReceive(context: Context, intent: Intent) = with(context) {
+            stopService(intent<PlayerService>())
+            Unit
         }
     }
 

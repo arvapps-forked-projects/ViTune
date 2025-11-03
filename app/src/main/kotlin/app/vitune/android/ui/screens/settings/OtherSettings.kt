@@ -5,7 +5,6 @@ import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -63,6 +62,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
+import androidx.core.net.toUri
+import app.vitune.android.DatabaseDependency
 
 @SuppressLint("BatteryLife")
 @Route
@@ -225,13 +226,13 @@ fun OtherSettings() {
                     try {
                         activityResultLauncher.launch(
                             Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                                data = Uri.parse("package:${context.packageName}")
+                                data = "package:${context.packageName}".toUri()
                             }
                         )
-                    } catch (e: ActivityNotFoundException) {
+                    } catch (_: ActivityNotFoundException) {
                         try {
                             activityResultLauncher.launch(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-                        } catch (e: ActivityNotFoundException) {
+                        } catch (_: ActivityNotFoundException) {
                             context.toast(context.getString(R.string.no_battery_optimization_settings_found))
                         }
                     }
@@ -306,9 +307,11 @@ fun OtherSettings() {
                     onClick = {
                         if (!reloading) troubleshootScope.launch {
                             reloading = true
-                            context.stopService(context.intent<PrecacheService>())
+                            with(context) {
+                                stopService(intent<PrecacheService>())
+                            }
                             binder?.restartForegroundOrStop()
-                            DatabaseInitializer.reload()
+                            DatabaseDependency.reload()
                             reloading = false
                         }
                     },

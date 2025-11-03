@@ -146,6 +146,7 @@ fun Queue(
 
     var windows by remember { mutableStateOf(binder.player.currentTimeline.windows) }
     var shouldBePlaying by remember { mutableStateOf(binder.player.shouldBePlaying) }
+    var previousMediaId by remember { mutableStateOf(windows[mediaItemIndex].mediaItem.mediaId) }
 
     val lazyListState = rememberLazyListState()
     val reorderingState = rememberReorderingState(
@@ -170,10 +171,15 @@ fun Queue(
     }
 
     LaunchedEffect(mediaItemIndex, shouldLoadSuggestions) {
+        // TODO: I hate all of this
+        val newMediaId = windows[mediaItemIndex].mediaItem.mediaId
+        if (previousMediaId == newMediaId && suggestions?.getOrNull()?.isNotEmpty() == true) return@LaunchedEffect
+        previousMediaId = newMediaId
+
         if (shouldLoadSuggestions) withContext(Dispatchers.IO) {
             suggestions = runCatching {
                 Innertube.nextPage(
-                    NextBody(videoId = windows[mediaItemIndex].mediaItem.mediaId)
+                    NextBody(videoId = newMediaId)
                 )?.mapCatching { page ->
                     page.itemsPage?.items?.map { it.asMediaItem }
                 }

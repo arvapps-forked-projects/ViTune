@@ -103,10 +103,9 @@ kotlin {
         languageVersion.set(KotlinVersion.KOTLIN_2_2)
 
         freeCompilerArgs.addAll(
-            "-Xcontext-receivers",
+            "-Xcontext-parameters",
             "-Xnon-local-break-continue",
-            "-Xconsistent-data-class-copy-visibility",
-            "-Xsuppress-warning=CONTEXT_RECEIVERS_DEPRECATED"
+            "-Xconsistent-data-class-copy-visibility"
         )
     }
 }
@@ -116,10 +115,6 @@ ksp {
 }
 
 composeCompiler {
-    featureFlags = setOf(
-        ComposeFeatureFlag.OptimizeNonSkippingGroups
-    )
-
     if (project.findProperty("enableComposeCompilerReports") == "true") {
         val dest = layout.buildDirectory.dir("compose_metrics")
         metricsDestination = dest
