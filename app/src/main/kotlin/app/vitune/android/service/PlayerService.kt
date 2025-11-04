@@ -18,6 +18,7 @@ import android.media.audiofx.PresetReverb
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Bundle
+import android.os.ResultReceiver
 import android.os.SystemClock
 import android.support.v4.media.session.MediaSessionCompat
 import android.text.format.DateUtils
@@ -27,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startForegroundService
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -38,6 +40,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.audio.SonicAudioProcessor
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSource
@@ -171,8 +174,8 @@ val DataSpec.isLocal get() = key?.startsWith(LOCAL_KEY_PREFIX) == true
 val MediaItem.isLocal get() = mediaId.startsWith(LOCAL_KEY_PREFIX)
 val Song.isLocal get() = id.startsWith(LOCAL_KEY_PREFIX)
 
-private const val LIKE_ACTION = "LIKE"
-private const val LOOP_ACTION = "LOOP"
+private const val LIKE_ACTION = "app.vitune.android.LIKE"
+private const val LOOP_ACTION = "app.vitune.android.LOOP"
 
 @kotlin.OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LargeClass", "TooManyFunctions") // intended in this class: it is a service
@@ -277,7 +280,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         super.onCreate()
 
         glyphInterface.tryInit()
-        notificationActionReceiver.register()
+        notificationActionReceiver.register(flags = ContextCompat.RECEIVER_EXPORTED)
 
         bitmapProvider = BitmapProvider(
             getBitmapSize = {

@@ -6,6 +6,7 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
@@ -131,7 +132,7 @@ class PrecacheService : DownloadService(
     override fun onCreate() {
         super.onCreate()
 
-        notificationActionReceiver.register()
+        notificationActionReceiver.register(flags = ContextCompat.RECEIVER_EXPORTED)
         mutableDownloadState.update { false }
     }
 
