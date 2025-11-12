@@ -27,7 +27,7 @@ android {
         minSdk = 24
         targetSdk = 36
 
-        versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 17
+        versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 18
         versionName = project.version.toString()
 
         multiDexEnabled = true
@@ -175,7 +175,7 @@ chaquopy {
     defaultConfig {
         version = "3.13"
         pip {
-            install("yt-dlp==2025.11.1.232827.dev0")
+            install("yt-dlp>=2025.11.12")
             install("yt-dlp-ejs")
             install("pip")
         }
