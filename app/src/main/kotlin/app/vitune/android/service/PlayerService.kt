@@ -56,6 +56,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.analytics.PlaybackStats
 import androidx.media3.exoplayer.analytics.PlaybackStatsListener
+import androidx.media3.exoplayer.audio.AudioOutputProvider
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioOffloadSupportProvider
 import androidx.media3.exoplayer.audio.DefaultAudioSink
@@ -1070,9 +1071,10 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             val minimumSilenceDuration =
                 PlayerPreferences.minimumSilence.coerceIn(1000L..2_000_000L)
 
+            @Suppress("DEPRECATION")
             return DefaultAudioSink.Builder(applicationContext)
                 .setEnableFloatOutput(enableFloatOutput)
-                .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                .setEnableAudioOutputPlaybackParameters(enableAudioTrackPlaybackParams)
                 .setAudioOffloadSupportProvider(
                     DefaultAudioOffloadSupportProvider(applicationContext)
                 )

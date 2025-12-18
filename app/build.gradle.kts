@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
@@ -18,7 +17,7 @@ android {
     compileSdk = 36
 
     val abis = listOf("arm64-v8a", "x86_64")
-    val cmakeVersion = "4.1.1"
+    val cmakeVersion = "4.1.2"
     ndkVersion = "29.0.14206865"
 
     defaultConfig {
@@ -149,7 +148,7 @@ kotlin {
     jvmToolchain(libs.versions.jvm.get().toInt())
 
     compilerOptions {
-        languageVersion.set(KotlinVersion.KOTLIN_2_2)
+        languageVersion.set(KotlinVersion.KOTLIN_2_5)
 
         freeCompilerArgs.addAll(
             "-Xcontext-parameters",
@@ -175,7 +174,7 @@ chaquopy {
     defaultConfig {
         version = "3.13"
         pip {
-            install("yt-dlp>=2025.11.12")
+            install("yt-dlp>=2025.12.8")
             install("yt-dlp-ejs")
             install("pip")
         }
