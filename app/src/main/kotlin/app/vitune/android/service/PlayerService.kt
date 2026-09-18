@@ -1003,6 +1003,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         }
 
         return {
+            @Suppress("DEPRECATION")
             this
                 .setContentTitle(mediaMetadata.title?.toString().orEmpty())
                 .setContentText(mediaMetadata.artist?.toString().orEmpty())
