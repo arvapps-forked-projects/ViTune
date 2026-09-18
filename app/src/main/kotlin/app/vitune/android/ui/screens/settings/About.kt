@@ -172,17 +172,13 @@ fun About() = SettingsCategoryScreen(
         VERSION_NAME
     )
 ) {
-    val (_, typography) = LocalAppearance.current
+    val [_, typography] = LocalAppearance.current
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
 
     var hasPermission by remember(isCompositionLaunched()) {
         mutableStateOf(
-            if (isAtLeastAndroid13) {
-                context.applicationContext.hasPermission(permission)
-            } else {
-                true
-            }
+            !isAtLeastAndroid13 || context.applicationContext.hasPermission(permission)
         )
     }
 

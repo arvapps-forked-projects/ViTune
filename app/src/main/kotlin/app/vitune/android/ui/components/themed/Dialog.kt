@@ -51,6 +51,7 @@ import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.utils.roundedShape
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun TextFieldDialog(
@@ -71,12 +72,12 @@ fun TextFieldDialog(
     modifier = modifier
 ) {
     val focusRequester = remember { FocusRequester() }
-    val (_, typography) = LocalAppearance.current
+    val [_, typography] = LocalAppearance.current
 
     var value by rememberSaveable(initialTextInput) { mutableStateOf(initialTextInput) }
 
     LaunchedEffect(Unit) {
-        delay(300)
+        delay(300.milliseconds)
         focusRequester.requestFocus()
     }
 
@@ -182,7 +183,7 @@ fun ColumnScope.ConfirmationDialogBody(
     confirmText: String = stringResource(R.string.confirm),
     onCancel: () -> Unit = onDismiss
 ) {
-    val (_, typography) = LocalAppearance.current
+    val [_, typography] = LocalAppearance.current
 
     BasicText(
         text = text,
@@ -356,7 +357,7 @@ fun ColumnScope.SliderDialogBody(
     @IntRange(from = 0) steps: Int = 0,
     label: String? = null
 ) {
-    val (_, typography) = LocalAppearance.current
+    val [_, typography] = LocalAppearance.current
     var state by provideState()
 
     if (label != null) BasicText(

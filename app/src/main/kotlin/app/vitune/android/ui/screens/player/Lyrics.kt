@@ -189,7 +189,7 @@ fun Lyrics(
                                 withContext(Dispatchers.Main) { currentDurationProvider() }
 
                             while (duration == C.TIME_UNSET) {
-                                delay(100)
+                                delay(100.milliseconds)
                                 duration =
                                     withContext(Dispatchers.Main) { currentDurationProvider() }
                             }
@@ -238,7 +238,7 @@ fun Lyrics(
                                 fixed = fixed.orEmpty(),
                                 synced = synced.orEmpty()
                             ).also {
-                                ensureActive()
+                                this@withContext.ensureActive()
 
                                 transaction {
                                     runCatching {
@@ -414,7 +414,7 @@ fun Lyrics(
                     )
 
                     while (true) {
-                        delay(UPDATE_DELAY)
+                        delay(UPDATE_DELAY.milliseconds)
                         if (!currentSynchronizedLyrics.update()) continue
 
                         lazyListState.animateScrollToItem(
@@ -639,7 +639,7 @@ fun LrcLibSearchDialog(
     horizontalPadding = 0.dp,
     modifier = modifier
 ) {
-    val (_, typography) = LocalAppearance.current
+    val [_, typography] = LocalAppearance.current
 
     val tracks = remember { mutableStateListOf<Track>() }
     var loading by remember { mutableStateOf(true) }
@@ -649,7 +649,7 @@ fun LrcLibSearchDialog(
         loading = true
         error = false
 
-        delay(1000)
+        delay(1000.milliseconds)
 
         LrcLib.lyrics(
             query = query,

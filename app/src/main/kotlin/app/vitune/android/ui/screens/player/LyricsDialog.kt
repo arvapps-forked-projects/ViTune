@@ -45,10 +45,10 @@ fun LyricsDialog(
 
     FullScreenState(shown = PlayerPreferences.lyricsShowSystemBars)
 
-    val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
+    val [colorPalette, _, _, thumbnailShape] = LocalAppearance.current
 
     val player = LocalPlayerServiceBinder.current?.player ?: return@Dialog
-    val (window, error) = windowState()
+    val [window, error] = windowState()
 
     LaunchedEffect(window, error) {
         if (window == null || error != null) currentOnDismiss()

@@ -1,6 +1,5 @@
 package app.vitune.android.ui.screens.builtinplaylist
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -58,7 +57,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun BuiltInPlaylistSongs(
     builtInPlaylist: BuiltInPlaylist,
@@ -93,7 +92,7 @@ fun BuiltInPlaylistSongs(
             BuiltInPlaylist.Top -> combine(
                 flow = topListPeriodProperty.stateFlow,
                 flow2 = topListLengthProperty.stateFlow
-            ) { period, length -> period to length }.flatMapLatest { (period, length) ->
+            ) { period, length -> period to length }.flatMapLatest { [period, length] ->
                 if (period.duration == null) Database
                     .songsByPlayTimeDesc(limit = length)
                     .distinctUntilChanged()
@@ -113,7 +112,7 @@ fun BuiltInPlaylistSongs(
 
     val lazyListState = rememberLazyListState()
 
-    val (currentMediaId, playing) = playingSong(binder)
+    val [currentMediaId, playing] = playingSong(binder)
 
     Box(modifier = modifier) {
         LazyColumn(

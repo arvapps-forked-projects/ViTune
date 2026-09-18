@@ -141,7 +141,7 @@ private fun SongItem(
     isPlaying: Boolean = false,
     hideExplicit: Boolean = AppearancePreferences.hideExplicit
 ) {
-    val (colorPalette, typography, _, thumbnailShape) = LocalAppearance.current
+    val [colorPalette, typography, _, thumbnailShape] = LocalAppearance.current
 
     SongItem(
         title = title,
@@ -302,7 +302,7 @@ fun SongItemPlaceholder(
     thumbnailSize = thumbnailSize,
     modifier = modifier
 ) {
-    val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
+    val [colorPalette, _, _, thumbnailShape] = LocalAppearance.current
 
     Spacer(
         modifier = Modifier

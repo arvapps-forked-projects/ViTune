@@ -89,9 +89,9 @@ fun Thumbnail(
     showLyricsControls: Boolean = true
 ) {
     val binder = LocalPlayerServiceBinder.current
-    val (colorPalette, _, _, thumbnailShape) = LocalAppearance.current
+    val [colorPalette, _, _, thumbnailShape] = LocalAppearance.current
 
-    val (window, error) = windowState()
+    val [window, error] = windowState()
 
     val coroutineScope = rememberCoroutineScope()
     val transitionState = remember { SeekableTransitionState(false) }

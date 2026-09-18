@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -116,7 +115,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Queue(
     layoutState: BottomSheetState,
@@ -131,7 +129,7 @@ fun Queue(
     scrollConnection: NestedScrollConnection = remember(layoutState::preUpPostDownNestedScrollConnection),
     windowInsets: WindowInsets = WindowInsets.systemBars
 ) {
-    val (colorPalette, typography, _, thumbnailShape) = LocalAppearance.current
+    val [colorPalette, typography, _, thumbnailShape] = LocalAppearance.current
     val menuState = LocalMenuState.current
 
     val horizontalBottomPaddingValues = windowInsets
