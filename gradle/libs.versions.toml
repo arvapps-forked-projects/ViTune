@@ -4,15 +4,15 @@ ksp = "2.3.12"
 
 #noinspection UnusedVersionCatalogEntry
 jvm = "25"
-agp = "9.4.0"
+agp = "9.4.1"
 
 room = "2.8.5"
-media3 = "1.11.0"
-ktor = "3.5.2"
+media3 = "1.11.1"
+ktor = "3.6.0"
 detekt = "2.0.0-alpha.6"
 workmanager = "2.11.2"
 credentials = "1.6.0"
-coil = "3.6.2"
+coil = "3.6.3"
 
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
